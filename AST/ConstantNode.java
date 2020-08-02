@@ -9,7 +9,7 @@ public class ConstantNode implements Expression {
 		this.token = Rvalue;
 	}
 	@Override
-	public double eval() throws Exception {
+	public Value eval() throws Exception {
 		if(!Constants.constants.containsKey(this.token.value)){ throw new Exception("Constant "+this.token.value+" doesn't exist."); }
 		return Constants.constants.get(this.token.value);
 	} public String toString(){

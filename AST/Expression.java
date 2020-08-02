@@ -1,5 +1,7 @@
 package AST;
 
+import lib.Value;
+
 public interface Expression {
-	double eval() throws Exception;
+	Value eval() throws Exception;
 }

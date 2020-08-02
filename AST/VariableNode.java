@@ -9,7 +9,7 @@ public class VariableNode implements Expression {
 		this.token = Rvalue;
 	}
 	@Override
-	public double eval() throws Exception {
+	public Value eval() throws Exception {
 		if(!Variables.variables.containsKey(this.token.value)){ throw new Exception("Variable "+this.token.value+" doesn't exist."); }
 		return Variables.variables.get(this.token.value);
 	} public String toString(){

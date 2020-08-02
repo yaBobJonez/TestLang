@@ -1,8 +1,8 @@
 package lib;
 
-public class DoubleValue implements Value {
+public class NumberValue implements Value {
 	public double value;
-	public DoubleValue(double value) {
+	public NumberValue(double value) {
 		this.value = value;
 	}
 	@Override
@@ -25,5 +25,6 @@ public class DoubleValue implements Value {
 		if(this.value == 0.0){ return true; }
 		return false;
 	}
-
+	
+	public String toString() { return this.asString(); }
 }

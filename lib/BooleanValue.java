@@ -25,5 +25,6 @@ public class BooleanValue implements Value {
 	public boolean asBoolean() {
 		return this.value;
 	}
-
+	
+	public String toString() { return this.asString(); }
 }

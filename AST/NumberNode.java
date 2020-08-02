@@ -1,5 +1,6 @@
 package AST;
 
+import lib.*;
 import test.Token;
 
 public class NumberNode implements Expression {
@@ -8,8 +9,8 @@ public class NumberNode implements Expression {
 		this.token = Rvalue;
 	}
 	@Override
-	public double eval() {
-		return Double.valueOf(this.token.value);
+	public Value eval() {
+		return new NumberValue(Double.parseDouble(this.token.value));
 	}
 	public String toString(){
 		return String.valueOf(this.token);

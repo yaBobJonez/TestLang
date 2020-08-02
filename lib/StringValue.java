@@ -27,5 +27,6 @@ public class StringValue implements Value {
 		try { return Boolean.parseBoolean(this.value); }
 		catch(Exception $e) { return false; }
 	}
-
+	
+	public String toString() { return this.value; }
 }

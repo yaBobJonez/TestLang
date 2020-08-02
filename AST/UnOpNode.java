@@ -1,5 +1,7 @@
 package AST;
 
+import lib.*;
+
 public class UnOpNode implements Expression {
 	public char operator;
 	public Expression right;
@@ -8,9 +10,9 @@ public class UnOpNode implements Expression {
 		this.right = right;
 	}
 	@Override
-	public double eval() throws Exception {
+	public Value eval() throws Exception {
 		switch(this.operator){
-			case '-': return -(this.right.eval());
+			case '-': return new NumberValue(- this.right.eval().asDouble());
 			default: return this.right.eval();
 		}
 	} public String toString(){

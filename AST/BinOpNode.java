@@ -1,5 +1,7 @@
 package AST;
 
+import lib.*;
+
 public class BinOpNode implements Expression {
 	public Expression left;
 	public char operator;
@@ -10,13 +12,16 @@ public class BinOpNode implements Expression {
 		this.right = right;
 	}
 	@Override
-	public double eval() throws Exception {
+	public Value eval() throws Exception {
+		double left = this.left.eval().asDouble();
+		double right = this.right.eval().asDouble();
 		switch(this.operator) {
-			case '+': return this.left.eval() + this.right.eval();
-			case '-': return this.left.eval() - this.right.eval();
-			case '*': return this.left.eval() * this.right.eval();
-			case '/': return this.left.eval() / this.right.eval();
-		} return 0;
+			case '+': return new NumberValue(left + right);
+			case '-': return new NumberValue(left - right);
+			case '*': return new NumberValue(left * right);
+			case '/': return new NumberValue(left / right);
+			default: return new NumberValue(left + right);
+		}
 	} public String toString(){
 		return "(" + String.valueOf(this.left) + ", " + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";
 	}

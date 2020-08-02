@@ -1,5 +1,6 @@
 package AST;
 
+import lib.Value;
 import lib.Variables;
 
 public class AssignmentStatement implements Statement {
@@ -11,7 +12,7 @@ public class AssignmentStatement implements Statement {
 	}
 	@Override
 	public void execute() throws Exception {
-		double result = expression.eval();
+		Value result = expression.eval();
 		Variables.set(this.variable, result);
 	} public String toString(){
 		return "Assign{" + this.variable + " = " + this.expression + "}";
