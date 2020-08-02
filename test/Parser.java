@@ -61,12 +61,14 @@ public class Parser {
 	public Expression factor() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TT_INT)){
-			return new NumberNode(curr_token);
+			return new ValueNode(curr_token);
 		} else if(matches(TokenList.TT_DOUBLE)){
-			return new NumberNode(curr_token);
+			return new ValueNode(curr_token);
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
-		}else if(matches(TokenList.TO_LPAR)){
+		} else if(matches(TokenList.TT_STRING)){
+			return new ValueNode(curr_token);
+		} else if(matches(TokenList.TO_LPAR)){
 			Expression result = this.expression();
 			this.matches(TokenList.TO_RPAR);
 			return result;

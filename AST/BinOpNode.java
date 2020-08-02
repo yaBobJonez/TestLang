@@ -13,14 +13,31 @@ public class BinOpNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		double left = this.left.eval().asDouble();
-		double right = this.right.eval().asDouble();
-		switch(this.operator) {
-			case '+': return new NumberValue(left + right);
-			case '-': return new NumberValue(left - right);
-			case '*': return new NumberValue(left * right);
-			case '/': return new NumberValue(left / right);
-			default: return new NumberValue(left + right);
+		Value left = this.left.eval();
+		Value right = this.right.eval();
+		if((left instanceof StringValue) && (right instanceof NumberValue)){
+			String string = left.asString();
+			int times = right.asInteger();
+			switch(this.operator){
+				default: return new StringValue(new String(new char[times]).replace("\0", string));
+			}
+		} else if((left instanceof StringValue) && (right instanceof StringValue)){
+			String str1 = left.asString();
+			String str2 = right.asString();
+			switch(this.operator){
+				default: return new StringValue(str1 + str2);
+			}
+		}
+		else {
+			double number1 = left.asDouble();
+			double number2 = right.asDouble();
+			switch(this.operator) {
+				case '+': return new NumberValue(number1 + number2);
+				case '-': return new NumberValue(number1 - number2);
+				case '*': return new NumberValue(number1 * number2);
+				case '/': return new NumberValue(number1 / number2);
+				default: return new NumberValue(number1 + number2);
+			}
 		}
 	} public String toString(){
 		return "(" + String.valueOf(this.left) + ", " + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";
