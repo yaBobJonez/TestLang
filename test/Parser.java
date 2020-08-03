@@ -21,6 +21,8 @@ public class Parser {
 		if(matches(TokenList.TS_SEMICOLON)){ return this.statement(); }
 		else if(matches(TokenList.TI_OUT)){
 			return new OutputStatement(this.expression());
+		} else if(matches(TokenList.TS_IF)){
+			return this.ifElseState();
 		}
 		return this.assignmentState();
 	}
@@ -31,11 +33,31 @@ public class Parser {
 			consume(TokenList.TS_ASSIGN);
 			return new AssignmentStatement(varName, this.expression());
 		} else { throw new Exception("Unsupported statement."); }
+	} public Statement ifElseState() throws Exception{
+		Expression condition = this.expression();
+		Statement ifState = this.statement();
+		Statement elseState;
+		if(matches(TokenList.TS_ELSE)){
+			elseState = this.statement();
+		} else {
+			elseState = null;
+		} return new IfElseStatement(condition, ifState, elseState);
 	}
 	public Expression expression() throws Exception{
-		return this.addition();
-	} 
-	public Expression addition() throws Exception{
+		return this.condition();
+	}
+	public Expression condition() throws Exception{
+		Expression result = this.addition();
+		while(true){
+			if(this.matches(TokenList.TL_EQUALS)){
+				result = new ConditionNode(result, "==", this.addition());
+			} else if(this.matches(TokenList.TL_LESS)){
+				result = new ConditionNode(result, "<", this.addition());
+			} else if(this.matches(TokenList.TL_GREATER)){
+				result = new ConditionNode(result, ">", this.addition());
+			} break;
+		} return result;
+	} public Expression addition() throws Exception{
 		Expression result = this.multiplication();
 		while(true){
 			if(this.matches(TokenList.TO_PLUS)){

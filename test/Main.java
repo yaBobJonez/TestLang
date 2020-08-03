@@ -7,7 +7,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("print \"hello\" + \"world\"; word = \"okay,\"; print word + \"boomer\"");
+		Lexer lexer = new Lexer("if 1 > 2 print 'Yes' else if 1 < 2 print 'No' else print 'Maybe'");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);
