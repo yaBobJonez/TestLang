@@ -44,17 +44,42 @@ public class Parser {
 		} return new IfElseStatement(condition, ifState, elseState);
 	}
 	public Expression expression() throws Exception{
-		return this.condition();
+		return this.logicDisjunction();
 	}
-	public Expression condition() throws Exception{
-		Expression result = this.addition();
+	public Expression logicDisjunction() throws Exception{
+		Expression result = this.logicConjuction();
+		while(true){
+			if(this.matches(TokenList.TL_OR)){
+				result = new ConditionNode(result, "|", this.logicConjuction());
+			} break;
+		} return result;
+	} public Expression logicConjuction() throws Exception{
+		Expression result = this.logicEquality();
+		while(true){
+			if(this.matches(TokenList.TL_AND)){
+				result = new ConditionNode(result, "&", this.logicEquality());
+			} break;
+		} return result;
+	} public Expression logicEquality() throws Exception{
+		Expression result = this.condition();
 		while(true){
 			if(this.matches(TokenList.TL_EQUALS)){
-				result = new ConditionNode(result, "==", this.addition());
-			} else if(this.matches(TokenList.TL_LESS)){
+				result = new ConditionNode(result, "==", this.condition());
+			} else if(this.matches(TokenList.TL_NEQUALS)){
+				result = new ConditionNode(result, "!=", this.condition());
+			} break;
+		} return result;
+	} public Expression condition() throws Exception{
+		Expression result = this.addition();
+		while(true){
+			if(this.matches(TokenList.TL_LESS)){
 				result = new ConditionNode(result, "<", this.addition());
 			} else if(this.matches(TokenList.TL_GREATER)){
 				result = new ConditionNode(result, ">", this.addition());
+			} else if(this.matches(TokenList.TL_EQLESS)){
+				result = new ConditionNode(result, "<=", this.addition());
+			} else if(this.matches(TokenList.TL_EQGREATER)){
+				result = new ConditionNode(result, ">=", this.addition());
 			} break;
 		} return result;
 	} public Expression addition() throws Exception{

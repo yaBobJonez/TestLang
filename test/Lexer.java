@@ -19,7 +19,7 @@ public class Lexer {
 	} public List<Token> tokenize(){
 		List<Token> tokens = new ArrayList<Token>();
 		while((this.curr_char != (char)0) && (this.position < this.text.length())){
-			if(this.curr_char == ' '){ this.advance(); }
+			if((this.curr_char == ' ') || (this.curr_char == '\n')){ this.advance(); }
 			else if("0123456789".indexOf(this.curr_char) != -1){ tokens.add(this.buildNumber()); }
 			else if("\"'".indexOf(this.curr_char) != -1){ tokens.add(this.buildString(this.curr_char)); }
 			else if("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(this.curr_char) != -1){ tokens.add(this.buildWord()); }
