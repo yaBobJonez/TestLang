@@ -32,6 +32,7 @@ public class Lexer {
 			else if(this.curr_char == '{') { tokens.add(new Token(TokenList.TO_LCURL, null)); this.advance(); }
 			else if(this.curr_char == '}') { tokens.add(new Token(TokenList.TO_RCURL, null)); this.advance(); }
 			else if(this.curr_char == ';') { tokens.add(new Token(TokenList.TS_SEMICOLON, null)); this.advance(); }
+			else if(this.curr_char == '#') { this.advance(); this.buildComment(); }
 			else { System.out.println("Illegal char: "+this.curr_char); this.advance(); }
 		}
 		tokens.add(new Token(TokenList.TS_EOF, null));
@@ -117,5 +118,9 @@ public class Lexer {
 		this.advance();
 		Token name = this.buildWord();
 		return new Token(TokenList.TT_CONST, name.value);
+	} public void buildComment(){
+		while(this.curr_char != '#'){
+			this.advance();
+		} this.advance();
 	}
 }
