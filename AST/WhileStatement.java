@@ -10,7 +10,9 @@ public class WhileStatement implements Statement {
 	@Override
 	public void execute() throws Exception {
 		while(this.condition.eval().asBoolean()){
-			this.statement.execute();
+			try { this.statement.execute(); }
+			catch (BreakStatement e) { break; }
+			catch (ContinueStatement e) { /*TODO continue*/ }
 		}
 	}
 	@Override

@@ -29,7 +29,8 @@ public class Parser {
 			return this.whileState();
 		} else if(matches(TokenList.TS_DOWHILE)){
 			return this.doWhileState();
-		}
+		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
+		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
 		return this.assignmentState();
 	}
 	public Statement assignmentState() throws Exception{

@@ -14,7 +14,9 @@ public class ForStatement implements Statement {
 	@Override
 	public void execute() throws Exception {
 		for(this.initial.execute(); this.condition.eval().asBoolean(); this.increment.execute()){
-			this.statement.execute();
+			try { this.statement.execute(); }
+			catch (BreakStatement e) { break; }
+			catch (ContinueStatement e) { /*TODO continue*/ }
 		}
 	}
 	@Override

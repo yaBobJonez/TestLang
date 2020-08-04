@@ -9,7 +9,11 @@ public class DoWhileStatement implements Statement {
 	}
 	@Override
 	public void execute() throws Exception {
-		do{ this.statement.execute(); } while (this.condition.eval().asBoolean());
+		do{
+			try { this.statement.execute(); }
+			catch (BreakStatement e) { break; }
+			catch (ContinueStatement e) { /*TODO continue*/ }
+		} while (this.condition.eval().asBoolean());
 	}
 	@Override
 	public String toString() {
