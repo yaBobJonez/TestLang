@@ -18,7 +18,7 @@ public class Parser {
 		} return result;
 	}
 	public Statement statement() throws Exception{
-		if(matches(TokenList.TS_SEMICOLON)){ return this.statement(); }
+		if(matches(TokenList.TS_SEMICOLON)){ return new SemicolonStatement(); }
 		else if(matches(TokenList.TI_OUT)){
 			return new OutputStatement(this.expression());
 		} else if(matches(TokenList.TS_IF)){
@@ -27,6 +27,8 @@ public class Parser {
 			return this.forState();
 		} else if(matches(TokenList.TS_WHILE)){
 			return this.whileState();
+		} else if(matches(TokenList.TS_DOWHILE)){
+			return this.doWhileState();
 		}
 		return this.assignmentState();
 	}
@@ -60,6 +62,11 @@ public class Parser {
 		Expression cond = this.expression();
 		Statement actions = this.StateOrBlock();
 		return new WhileStatement(cond, actions);
+	} public Statement doWhileState() throws Exception{
+		Statement actions = this.StateOrBlock();
+		this.consume(TokenList.TS_WHILE);
+		Expression cond = this.expression();
+		return new DoWhileStatement(actions, cond);
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
