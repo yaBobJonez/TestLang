@@ -23,6 +23,10 @@ public class Parser {
 			return new OutputStatement(this.expression());
 		} else if(matches(TokenList.TS_IF)){
 			return this.ifElseState();
+		} else if(matches(TokenList.TS_FOR)){
+			return this.forState();
+		} else if(matches(TokenList.TS_WHILE)){
+			return this.whileState();
 		}
 		return this.assignmentState();
 	}
@@ -42,6 +46,20 @@ public class Parser {
 		} else {
 			elseState = null;
 		} return new IfElseStatement(condition, ifState, elseState);
+	} public Statement forState() throws Exception{
+		this.consume(TokenList.TO_LPAR);
+		Statement init = this.assignmentState();
+		this.consume(TokenList.TO_COMMA);
+		Expression cond = this.expression();
+		this.consume(TokenList.TO_COMMA);
+		Statement incr = this.assignmentState();
+		this.consume(TokenList.TO_RPAR);
+		Statement actions = this.StateOrBlock();
+		return new ForStatement(init, cond, incr, actions);
+	} public Statement whileState() throws Exception{
+		Expression cond = this.expression();
+		Statement actions = this.StateOrBlock();
+		return new WhileStatement(cond, actions);
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
