@@ -31,6 +31,9 @@ public class Parser {
 			return this.doWhileState();
 		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
+		else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+			return new FunctionStatement(this.function());
+		}
 		return this.assignmentState();
 	}
 	public Statement assignmentState() throws Exception{
@@ -68,6 +71,14 @@ public class Parser {
 		this.consume(TokenList.TS_WHILE);
 		Expression cond = this.expression();
 		return new DoWhileStatement(actions, cond);
+	} public FunctionNode function() throws Exception{
+		String name = this.consume(TokenList.TS_ID).value;
+		this.consume(TokenList.TO_LPAR);
+		FunctionNode func = new FunctionNode(name);
+		while(!this.matches(TokenList.TO_RPAR)){
+			func.addArg(this.expression());
+			this.matches(TokenList.TO_COMMA);
+		} return func;
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
@@ -157,6 +168,8 @@ public class Parser {
 			return result;
 		} else if(matches(TokenList.TT_CONST)){
 			return new ConstantNode(curr_token);
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+			return this.function();
 		} else { throw new Exception("Unregistered/invalid expression."); }
 	}
 	public boolean matches(String type){
