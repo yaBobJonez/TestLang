@@ -35,13 +35,23 @@ public class Parser {
 		} else { throw new Exception("Unsupported statement."); }
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
-		Statement ifState = this.statement();
+		Statement ifState = this.StateOrBlock();
 		Statement elseState;
 		if(matches(TokenList.TS_ELSE)){
-			elseState = this.statement();
+			elseState = this.StateOrBlock();
 		} else {
 			elseState = null;
 		} return new IfElseStatement(condition, ifState, elseState);
+	}
+	public Statement StateOrBlock() throws Exception{
+		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
+		return this.statement();
+	} public Statement blockState() throws Exception{
+		BlockStatement block = new BlockStatement();
+		this.consume(TokenList.TO_LCURL);
+		while(!this.matches(TokenList.TO_RCURL)){
+			block.add(this.statement());
+		} return block;
 	}
 	public Expression expression() throws Exception{
 		return this.logicDisjunction();

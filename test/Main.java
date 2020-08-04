@@ -7,7 +7,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("if (2 >= 2 & 4 < 8) print 'FINE'");
+		Lexer lexer = new Lexer("if (2 >= 2 & 4 < 8) { print 'New:'; print 'blocks!' }");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);
