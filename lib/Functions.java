@@ -15,7 +15,7 @@ public class Functions {
 	static {
 		Functions.functions = new HashMap<>();
 		//TODO basic functions
-		Functions.set("testFunc", args -> {
+		Functions.set("printm", args -> {
 			for(Value arg : args){ System.out.println(arg); }
 			return new BooleanValue(false);
 		});

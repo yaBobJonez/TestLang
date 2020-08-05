@@ -19,7 +19,16 @@ public class FunctionNode implements Expression {
 		int size = this.args.size();
 		Value[] argsValues = new Value[size];
 		for(int i = 0; i < size; i++){ argsValues[i] = this.args.get(i).eval(); }
-		return Functions.get(this.name).execute(argsValues);
+		Function func = Functions.get(name);
+		if(func instanceof UserFunction){
+			UserFunction uFunc = (UserFunction)func;
+			if(size != uFunc.args.size()){ throw new Exception("Arguments count mismatch."); }
+			Variables.push();
+			for(int i = 0; i < size; i++){ Variables.set(uFunc.getArg(i), argsValues[i]); }
+			Value result = uFunc.execute(argsValues);
+			Variables.pop();
+			return result;
+		} else { return func.execute(argsValues); }
 	}
 	public void addArg(Expression argument){
 		this.args.add(argument);

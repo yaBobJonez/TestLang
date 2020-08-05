@@ -31,6 +31,10 @@ public class Parser {
 			return this.doWhileState();
 		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
+		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
+		else if(matches(TokenList.TS_FUNCTION)){
+			return this.defineFunction();
+		}
 		else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return new FunctionStatement(this.function());
 		}
@@ -79,6 +83,15 @@ public class Parser {
 			func.addArg(this.expression());
 			this.matches(TokenList.TO_COMMA);
 		} return func;
+	} public FuncDefStatement defineFunction() throws Exception{
+		String name = this.consume(TokenList.TS_ID).value;
+		this.consume(TokenList.TO_LPAR);
+		List<String> args = new ArrayList<>();
+		while(!this.matches(TokenList.TO_RPAR)){
+			args.add(this.consume(TokenList.TS_ID).value);
+			this.matches(TokenList.TO_COMMA);
+		} Statement body = this.StateOrBlock();
+		return new FuncDefStatement(name, args, body);
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
@@ -158,6 +171,8 @@ public class Parser {
 			return new ValueNode(curr_token);
 		} else if(matches(TokenList.TT_DOUBLE)){
 			return new ValueNode(curr_token);
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+			return this.function();
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_STRING)){
@@ -168,8 +183,6 @@ public class Parser {
 			return result;
 		} else if(matches(TokenList.TT_CONST)){
 			return new ConstantNode(curr_token);
-		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return this.function();
 		} else { throw new Exception("Unregistered/invalid expression."); }
 	}
 	public boolean matches(String type){
