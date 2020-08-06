@@ -41,11 +41,17 @@ public class Parser {
 		return this.assignmentState();
 	}
 	public Statement assignmentState() throws Exception{
-		Token curr_token = this.getToken(0);
-		if(matches(TokenList.TS_ID) && this.getToken(0).type == TokenList.TS_ASSIGN){
-			String varName = curr_token.value;
+		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TS_ASSIGN){
+			String varName = this.consume(TokenList.TS_ID).value;
 			consume(TokenList.TS_ASSIGN);
 			return new AssignmentStatement(varName, this.expression());
+		} if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
+			String varName = this.consume(TokenList.TS_ID).value;
+			consume(TokenList.TO_LBRA);
+			Expression index = this.expression();
+			consume(TokenList.TO_RBRA);
+			consume(TokenList.TS_ASSIGN);
+			return new ArrayAssignmentStatement(varName, index, this.expression());
 		} else { throw new Exception("Unsupported statement."); }
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
@@ -102,6 +108,20 @@ public class Parser {
 		while(!this.matches(TokenList.TO_RCURL)){
 			block.add(this.statement());
 		} return block;
+	}
+	public Expression arrayElement() throws Exception{
+		String varName = this.consume(TokenList.TS_ID).value;
+		consume(TokenList.TO_LBRA);
+		Expression index = this.expression();
+		consume(TokenList.TO_RBRA);
+		return new ArrayAccessNode(varName, index);
+	} public Expression array() throws Exception{
+		consume(TokenList.TO_LBRA);
+		List<Expression> elements = new ArrayList<>();
+		while(!this.matches(TokenList.TO_RBRA)){
+			elements.add(this.expression());
+			this.matches(TokenList.TO_COMMA);
+		} return new ArrayNode(elements);
 	}
 	public Expression expression() throws Exception{
 		return this.logicDisjunction();
@@ -173,6 +193,10 @@ public class Parser {
 			return new ValueNode(curr_token);
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return this.function();
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
+			return this.arrayElement();
+		} else if(this.getToken(0).type == TokenList.TO_LBRA){
+			return this.array();
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_STRING)){

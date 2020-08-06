@@ -1,5 +1,6 @@
 package lib;
 
+import java.util.concurrent.*;
 import java.util.*;
 
 public class Functions {
@@ -17,7 +18,12 @@ public class Functions {
 		//TODO basic functions
 		Functions.set("printm", args -> {
 			for(Value arg : args){ System.out.println(arg); }
-			return new BooleanValue(false);
+			return new BooleanValue(true);
+		});
+		Functions.set("Arthur", args -> {
+			if(args.length != 1){ throw new Exception("One int argument expected."); }
+			TimeUnit.MILLISECONDS.sleep(args[0].asInteger());
+			return new BooleanValue(true);
 		});
 	}
 }
