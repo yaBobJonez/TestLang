@@ -46,12 +46,9 @@ public class Parser {
 			consume(TokenList.TS_ASSIGN);
 			return new AssignmentStatement(varName, this.expression());
 		} if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
-			String varName = this.consume(TokenList.TS_ID).value;
-			consume(TokenList.TO_LBRA);
-			Expression index = this.expression();
-			consume(TokenList.TO_RBRA);
+			ArrayAccessNode array = this.arrayElement();
 			consume(TokenList.TS_ASSIGN);
-			return new ArrayAssignmentStatement(varName, index, this.expression());
+			return new ArrayAssignmentStatement(array, this.expression());
 		} else { throw new Exception("Unsupported statement."); }
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
@@ -109,12 +106,15 @@ public class Parser {
 			block.add(this.statement());
 		} return block;
 	}
-	public Expression arrayElement() throws Exception{
+	public ArrayAccessNode arrayElement() throws Exception{
 		String varName = this.consume(TokenList.TS_ID).value;
-		consume(TokenList.TO_LBRA);
-		Expression index = this.expression();
-		consume(TokenList.TO_RBRA);
-		return new ArrayAccessNode(varName, index);
+		List<Expression> path = new ArrayList<>();
+		do {
+			consume(TokenList.TO_LBRA);
+			path.add(this.expression());
+			consume(TokenList.TO_RBRA);
+		} while(this.getToken(0).type == TokenList.TO_LBRA);
+		return new ArrayAccessNode(varName, path);
 	} public Expression array() throws Exception{
 		consume(TokenList.TO_LBRA);
 		List<Expression> elements = new ArrayList<>();

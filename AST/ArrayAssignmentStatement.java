@@ -1,26 +1,18 @@
 package AST;
 
-import lib.*;
-
 public class ArrayAssignmentStatement implements Statement {
-	public String name;
-	public Expression index;
+	public ArrayAccessNode array;
 	public Expression value;
-	public ArrayAssignmentStatement(String name, Expression index, Expression value) {
-		this.name = name;
-		this.index = index;
+	public ArrayAssignmentStatement(ArrayAccessNode array, Expression value) {
+		this.array = array;
 		this.value = value;
 	}
 	@Override
 	public void execute() throws Exception {
-		Value item = Variables.get(this.name);
-		if(item instanceof ArrayValue){
-			ArrayValue array = (ArrayValue)item;
-			array.set(this.index.eval().asInteger(), this.value.eval());
-		} else { throw new Exception("Not an array."); }
+		this.array.getArray().set(this.array.path.size() - 1, this.value.eval());
 	}
 	@Override
 	public String toString() {
-		return "Assign{array = " + this.name + "; index = " + this.index + "; value = " + this.value + "}";
+		return "Assign{array = " + this.array + "; value = " + this.value + "}";
 	}
 }
