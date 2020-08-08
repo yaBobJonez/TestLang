@@ -2,11 +2,11 @@ package AST;
 
 import lib.*;
 
-public class ConditionNode implements Expression {
+public class LogicNode implements Expression {
 	public Expression left;
 	public String operator;
 	public Expression right;
-	public ConditionNode(Expression left, String operator, Expression right) {
+	public LogicNode(Expression left, String operator, Expression right) {
 		this.left = left;
 		this.operator = operator;
 		this.right = right;

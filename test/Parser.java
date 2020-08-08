@@ -11,8 +11,8 @@ public class Parser {
 		this.tokens = tokens;
 		this.size = tokens.size();
 	}
-	public List<Statement> parse() throws Exception{
-		List<Statement> result = new ArrayList<>();
+	public Statement parse() throws Exception{
+		BlockStatement result = new BlockStatement();
 		while(!this.matches(TokenList.TS_EOF)){
 			result.add(this.statement());
 		} return result;
@@ -130,36 +130,36 @@ public class Parser {
 		Expression result = this.logicConjuction();
 		while(true){
 			if(this.matches(TokenList.TL_OR)){
-				result = new ConditionNode(result, "|", this.logicConjuction());
+				result = new LogicNode(result, "|", this.logicConjuction());
 			} break;
 		} return result;
 	} public Expression logicConjuction() throws Exception{
 		Expression result = this.logicEquality();
 		while(true){
 			if(this.matches(TokenList.TL_AND)){
-				result = new ConditionNode(result, "&", this.logicEquality());
+				result = new LogicNode(result, "&", this.logicEquality());
 			} break;
 		} return result;
 	} public Expression logicEquality() throws Exception{
 		Expression result = this.condition();
 		while(true){
 			if(this.matches(TokenList.TL_EQUALS)){
-				result = new ConditionNode(result, "==", this.condition());
+				result = new LogicNode(result, "==", this.condition());
 			} else if(this.matches(TokenList.TL_NEQUALS)){
-				result = new ConditionNode(result, "!=", this.condition());
+				result = new LogicNode(result, "!=", this.condition());
 			} break;
 		} return result;
 	} public Expression condition() throws Exception{
 		Expression result = this.addition();
 		while(true){
 			if(this.matches(TokenList.TL_LESS)){
-				result = new ConditionNode(result, "<", this.addition());
+				result = new LogicNode(result, "<", this.addition());
 			} else if(this.matches(TokenList.TL_GREATER)){
-				result = new ConditionNode(result, ">", this.addition());
+				result = new LogicNode(result, ">", this.addition());
 			} else if(this.matches(TokenList.TL_EQLESS)){
-				result = new ConditionNode(result, "<=", this.addition());
+				result = new LogicNode(result, "<=", this.addition());
 			} else if(this.matches(TokenList.TL_EQGREATER)){
-				result = new ConditionNode(result, ">=", this.addition());
+				result = new LogicNode(result, ">=", this.addition());
 			} break;
 		} return result;
 	} public Expression addition() throws Exception{
