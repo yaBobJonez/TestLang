@@ -31,4 +31,8 @@ public class ArrayAccessNode implements Expression {
 	public String toString(){
 		return "ArrayAccess{name = " + this.var + "; path = " + this.path + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

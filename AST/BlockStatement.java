@@ -23,4 +23,8 @@ public class BlockStatement implements Statement {
 		} str += "}";
 		return str;
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

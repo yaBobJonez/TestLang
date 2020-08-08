@@ -35,4 +35,8 @@ public class FunctionNode implements Expression {
 	} public String toString(){
 		return "Function{name = " + this.name + "; args = " + this.args.toString() + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

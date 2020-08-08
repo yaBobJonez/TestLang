@@ -15,4 +15,8 @@ public class ArrayAssignmentStatement implements Statement {
 	public String toString() {
 		return "Assign{array = " + this.array + "; value = " + this.value + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

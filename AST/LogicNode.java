@@ -36,4 +36,8 @@ public class LogicNode implements Expression {
 	} public String toString(){
 		return "(" + String.valueOf(this.left) + ", " + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

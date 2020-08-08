@@ -15,4 +15,8 @@ public class VariableNode implements Expression {
 	} public String toString(){
 		return String.valueOf(this.token);
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

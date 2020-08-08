@@ -23,4 +23,8 @@ public class ForStatement implements Statement {
 	public String toString() {
 		return "For{init = " + this.initial + "; cond = " + this.condition + "; incr = " + this.increment + "; do = " + this.statement + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

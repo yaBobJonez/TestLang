@@ -10,4 +10,8 @@ public class BreakStatement extends Exception implements Statement {
 	public String toString() {
 		return "Break";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

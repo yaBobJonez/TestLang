@@ -17,4 +17,8 @@ public class AssignmentStatement implements Statement {
 	} public String toString(){
 		return "Assign{" + this.variable + " = " + this.expression + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

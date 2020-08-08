@@ -11,4 +11,8 @@ public class FunctionStatement implements Statement {
 	} public String toString(){
 		return this.function.toString();
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

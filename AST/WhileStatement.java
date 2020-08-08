@@ -19,4 +19,8 @@ public class WhileStatement implements Statement {
 	public String toString() {
 		return "While{condition = " + this.condition + "; do = " + this.statement + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

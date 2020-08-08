@@ -24,4 +24,8 @@ public class IfElseStatement implements Statement {
 		if(this.elseStatement != null){ str += "; else = " + this.elseStatement; }
 		return str += "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

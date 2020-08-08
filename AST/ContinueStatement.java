@@ -10,4 +10,8 @@ public class ContinueStatement extends Exception implements Statement {
 	public String toString() {
 		return "Continue";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

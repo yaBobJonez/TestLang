@@ -18,4 +18,8 @@ public class ReturnStatement extends Exception implements Statement {
 	} public Value outcome(){
 		return this.result;
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

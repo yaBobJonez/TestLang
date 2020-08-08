@@ -19,4 +19,8 @@ public class DoWhileStatement implements Statement {
 	public String toString() {
 		return "DoWhile{actions = " + this.statement + "; cond = " + this.condition + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

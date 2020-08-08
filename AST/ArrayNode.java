@@ -19,4 +19,8 @@ public class ArrayNode implements Expression {
 	public String toString(){
 		return this.elements.toString();
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

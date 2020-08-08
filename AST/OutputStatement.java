@@ -11,4 +11,8 @@ public class OutputStatement implements Statement {
 	} public String toString() {
 		return "Output{" + this.expression + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }

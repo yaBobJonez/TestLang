@@ -18,4 +18,8 @@ public class FuncDefStatement implements Statement {
 	} public String toString(){
 		return "FuncDef{name = " + this.name + "; args = " + this.args.toString() + "; body = " + this.body + "}";
 	}
+	@Override
+	public void accept(Visitor visitor) throws Exception {
+		visitor.visit(this);
+	}
 }
