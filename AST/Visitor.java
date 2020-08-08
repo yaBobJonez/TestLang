@@ -21,6 +21,7 @@ public interface Visitor {
 	void visit(ReturnStatement s) throws Exception;
 	void visit(SemicolonStatement s);
 	void visit(UnOpNode s) throws Exception;
+	void visit(UseStatement s) throws Exception;
 	void visit(ValueNode s);
 	void visit(VariableNode s);
 	void visit(WhileStatement s) throws Exception;

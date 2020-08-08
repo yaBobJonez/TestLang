@@ -85,6 +85,10 @@ public abstract class AbstractVisitor implements Visitor {
 		s.right.accept(this);
 	}
 	@Override
+	public void visit(UseStatement s) throws Exception {
+		s.name.accept(this);
+	}
+	@Override
 	public void visit(ValueNode s) {}
 	@Override
 	public void visit(VariableNode s) {}

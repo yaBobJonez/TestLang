@@ -14,7 +14,7 @@ public class ReturnStatement extends Exception implements Statement {
 		this.result = this.expression.eval();
 		throw this;
 	} public String toString(){
-		return "Return";
+		return "Return{" + this.expression + "}";
 	} public Value outcome(){
 		return this.result;
 	}
