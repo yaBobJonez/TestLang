@@ -81,6 +81,12 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(SemicolonStatement s) {}
 	@Override
+	public void visit(TernaryNode s) throws Exception {
+		s.condition.accept(this);
+		s.trueActions.accept(this);
+		s.falseActions.accept(this);
+	}
+	@Override
 	public void visit(UnOpNode s) throws Exception {
 		s.right.accept(this);
 	}

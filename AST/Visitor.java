@@ -20,6 +20,7 @@ public interface Visitor {
 	void visit(OutputStatement s) throws Exception;
 	void visit(ReturnStatement s) throws Exception;
 	void visit(SemicolonStatement s);
+	void visit(TernaryNode s) throws Exception;
 	void visit(UnOpNode s) throws Exception;
 	void visit(UseStatement s) throws Exception;
 	void visit(ValueNode s);

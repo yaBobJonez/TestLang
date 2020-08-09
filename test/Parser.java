@@ -125,11 +125,19 @@ public class Parser {
 		} return new ArrayNode(elements);
 	}
 	public Expression expression() throws Exception{
-		return this.logicDisjunction();
+		return this.ternary();
 	}
-	public Expression logicDisjunction() throws Exception{
+	public Expression ternary() throws Exception{
+		Expression result = this.logicDisjunction();
+		if(this.matches(TokenList.TS_QUESTION)){
+			Expression trueExpr = this.expression();
+			this.consume(TokenList.TS_COLON);
+			Expression falseExpr = this.expression();
+			return new TernaryNode(result, trueExpr, falseExpr);
+		} return result;
+	} public Expression logicDisjunction() throws Exception{
 		Expression result = this.logicConjuction();
-		while(true){
+		while(true){ //TODO single if statements without while/break where possible (after everything else). 
 			if(this.matches(TokenList.TL_OR)){
 				result = new LogicNode(result, "|", this.logicConjuction());
 			} break;

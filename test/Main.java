@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("use 'std'; printM('a', 'b');");
+		Lexer lexer = new Lexer("a = (4 > 2) ? 'Y' : 'N'; print a;");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);
