@@ -210,6 +210,8 @@ public class Parser {
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_STRING)){
 			return new ValueNode(curr_token);
+		} else if(matches(TokenList.TT_BOOL)){
+			return new ValueNode(curr_token);
 		} else if(matches(TokenList.TO_LPAR)){
 			Expression result = this.expression();
 			this.matches(TokenList.TO_RPAR);

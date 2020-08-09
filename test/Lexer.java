@@ -60,6 +60,8 @@ public class Lexer {
 			case "do": return new Token(TokenList.TS_DOWHILE, null);
 			case "for": return new Token(TokenList.TS_FOR, null);
 			case "foreach": return new Token(TokenList.TS_FOREACH, null);
+			case "true": return new Token(TokenList.TT_BOOL, "true");
+			case "false": return new Token(TokenList.TT_BOOL, "false");
 			case "function": return new Token(TokenList.TS_FUNCTION, null);
 			case "switch": return new Token(TokenList.TS_SWITCH, null);
 			case "import": return new Token(TokenList.TS_IMPORT, null);
