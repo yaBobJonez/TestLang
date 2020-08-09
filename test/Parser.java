@@ -2,6 +2,7 @@ package test;
 
 import java.util.*;
 import AST.*;
+import lib.UserFunction;
 
 public class Parser {
 	public List<Token> tokens;
@@ -96,6 +97,14 @@ public class Parser {
 			this.matches(TokenList.TO_COMMA);
 		} Statement body = this.StateOrBlock();
 		return new FuncDefStatement(name, args, body);
+	} public ValueNode functionVariable() throws Exception{
+		this.consume(TokenList.TO_LPAR);
+		List<String> args = new ArrayList<>();
+		while(!this.matches(TokenList.TO_RPAR)){
+			args.add(this.consume(TokenList.TS_ID).value);
+			this.matches(TokenList.TO_COMMA);
+		} Statement body = this.StateOrBlock();
+		return new ValueNode(new UserFunction(args, body));
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
@@ -197,9 +206,9 @@ public class Parser {
 	public Expression factor() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TT_INT)){
-			return new ValueNode(curr_token);
+			return new ValueNode(Double.parseDouble(curr_token.value));
 		} else if(matches(TokenList.TT_DOUBLE)){
-			return new ValueNode(curr_token);
+			return new ValueNode(Double.parseDouble(curr_token.value));
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return this.function();
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
@@ -209,9 +218,11 @@ public class Parser {
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_STRING)){
-			return new ValueNode(curr_token);
+			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
-			return new ValueNode(curr_token);
+			return new ValueNode(Boolean.parseBoolean(curr_token.value));
+		} else if(matches(TokenList.TS_FUNCTION)){
+			return this.functionVariable();
 		} else if(matches(TokenList.TO_LPAR)){
 			Expression result = this.expression();
 			this.matches(TokenList.TO_RPAR);
