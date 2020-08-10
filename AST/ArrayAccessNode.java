@@ -12,7 +12,7 @@ public class ArrayAccessNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		return this.getArray().get(this.index(this.path.size() - 1));
+		return this.getArray().get(this.lastIndex());
 	}
 	public ArrayValue checkForArray(Value array) throws Exception{
 		if(array instanceof ArrayValue){
@@ -21,12 +21,15 @@ public class ArrayAccessNode implements Expression {
 	}
 	public ArrayValue getArray() throws Exception{
 		ArrayValue array = this.checkForArray(Variables.get(this.var));
-		for(int i = 0; i < this.path.size() - 1; i++){
+		int last = this.path.size() - 1;
+		for(int i = 0; i < last; i++){
 			array = this.checkForArray(array.get(this.index(i)));
 		} return array;
 	}
 	public int index(int index) throws Exception{
 		return this.path.get(index).eval().asInteger();
+	} public int lastIndex() throws Exception{
+		return this.index(this.path.size() - 1);
 	}
 	public String toString(){
 		return "ArrayAccess{name = " + this.var + "; path = " + this.path + "}";

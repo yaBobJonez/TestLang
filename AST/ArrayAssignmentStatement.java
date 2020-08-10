@@ -9,7 +9,7 @@ public class ArrayAssignmentStatement implements Statement {
 	}
 	@Override
 	public void execute() throws Exception {
-		this.array.getArray().set(this.array.path.size() - 1, this.value.eval());
+		this.array.getArray().set(this.array.lastIndex(), this.value.eval());
 	}
 	@Override
 	public String toString() {

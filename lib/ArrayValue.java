@@ -17,7 +17,8 @@ public class ArrayValue implements Value {
 	public Value get(int index) {
 		return this.elements.get(index);
 	} public void set(int index, Value value) {
-		this.elements.add(index, value);
+		if(index < this.elements.size()) this.elements.set(index, value);
+		else this.elements.add(index, value);
 	}
 	@Override
 	public String asString() {
