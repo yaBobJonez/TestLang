@@ -36,6 +36,18 @@ public class ArrayValue implements Value {
 	public boolean asBoolean() {
 		return true;
 	}
+	@Override
+	public int hashCode() {
+		return 31 * 1 + Objects.hashCode(this.elements);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		ArrayValue other = (ArrayValue) obj;
+		return Objects.equals(this.elements, other.elements);
+	}
 	public String toString() {
 		return this.asString();
 	}

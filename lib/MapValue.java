@@ -32,6 +32,18 @@ public class MapValue implements Value {
 	public boolean asBoolean() {
 		return true;
 	}
+	@Override
+	public int hashCode() {
+		return 37 * 5 + Objects.hashCode(this.array);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		MapValue other = (MapValue) obj;
+		return Objects.equals(array, other.array);
+	}
 	public String toString(){
 		return this.asString();
 	}

@@ -1,5 +1,7 @@
 package lib;
 
+import java.util.Objects;
+
 public class StringValue implements Value {
 	public String value;
 	public StringValue(String value) {
@@ -27,6 +29,17 @@ public class StringValue implements Value {
 		try { return Boolean.parseBoolean(this.value); }
 		catch(Exception $e) { return false; }
 	}
-	
+	@Override
+	public int hashCode() {
+		return 23 * 7 + Objects.hashCode(this.value);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		StringValue other = (StringValue) obj;
+		return Objects.equals(value, other.value);
+	}
 	public String toString() { return this.value; }
 }
