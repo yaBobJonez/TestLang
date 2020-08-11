@@ -22,4 +22,8 @@ public class UserFunction implements Function {
 		if(index < 0 || index >= this.args.size()){ return null; }
 		return this.args.get(index);
 	}
+	@Override
+	public String toString() {
+		return "UserFunction{args = " + this.args + "; body = " + this.body + "}";
+	}
 }

@@ -71,6 +71,13 @@ public abstract class AbstractVisitor implements Visitor {
 		s.right.accept(this);
 	}
 	@Override
+	public void visit(MapNode s) throws Exception {
+		for(Expression key : s.elements.keySet()){
+			key.accept(this);
+			s.elements.get(key).accept(this);
+		}
+	}
+	@Override
 	public void visit(OutputStatement s) throws Exception {
 		s.expression.accept(this);
 	}

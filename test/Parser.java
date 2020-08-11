@@ -132,6 +132,16 @@ public class Parser {
 			elements.add(this.expression());
 			this.matches(TokenList.TO_COMMA);
 		} return new ArrayNode(elements);
+	} public Expression associativeArray() throws Exception{
+		consume(TokenList.TO_LCURL);
+		Map<Expression, Expression> elements = new HashMap<>();
+		while(!this.matches(TokenList.TO_RCURL)){
+			Expression key = this.factor();
+			consume(TokenList.TS_COLON);
+			Expression value = this.expression();
+			elements.put(key, value);
+			matches(TokenList.TO_COMMA);
+		} return new MapNode(elements);
 	}
 	public Expression expression() throws Exception{
 		return this.ternary();
@@ -209,12 +219,14 @@ public class Parser {
 			return new ValueNode(Double.parseDouble(curr_token.value));
 		} else if(matches(TokenList.TT_DOUBLE)){
 			return new ValueNode(Double.parseDouble(curr_token.value));
-		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return this.function();
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
 			return this.arrayElement();
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+			return this.function();
 		} else if(this.getToken(0).type == TokenList.TO_LBRA){
 			return this.array();
+		} else if(this.getToken(0).type == TokenList.TO_LCURL){
+			return this.associativeArray();
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_STRING)){

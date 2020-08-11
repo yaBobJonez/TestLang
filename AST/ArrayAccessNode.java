@@ -12,7 +12,12 @@ public class ArrayAccessNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		return this.getArray().get(this.lastIndex());
+		Value object = Variables.get(this.var);
+		if(object instanceof ArrayValue){
+			return this.getArray().get(this.lastIndex());
+		} else if(object instanceof MapValue){
+			return ((MapValue)object).array.get(this.path.get(0).eval());
+		} else throw new Exception("Not an array.");
 	}
 	public ArrayValue checkForArray(Value array) throws Exception{
 		if(array instanceof ArrayValue){
