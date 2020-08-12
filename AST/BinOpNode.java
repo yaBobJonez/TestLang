@@ -4,9 +4,9 @@ import lib.*;
 
 public class BinOpNode implements Expression {
 	public Expression left;
-	public char operator;
+	public String operator;
 	public Expression right;
-	public BinOpNode(Expression left, char operator, Expression right) {
+	public BinOpNode(Expression left, String operator, Expression right) {
 		this.left = left;
 		this.operator = operator;
 		this.right = right;
@@ -27,21 +27,21 @@ public class BinOpNode implements Expression {
 			switch(this.operator){
 				default: return new StringValue(str1 + str2);	//TODO simplify
 			}
-		} else if((left instanceof ArrayValue) && (right instanceof StringValue)){
-			String str1 = left.asString();
+		} else if(left instanceof ArrayValue){
+			ArrayValue str1 = (ArrayValue)left;
 			String str2 = right.asString();
 			switch(this.operator){
-				default: return new StringValue(str1 + str2);
+				default: { str1.elements.add(new StringValue(str2)); return new ArrayValue(str1); }
 			}
 		}
 		else {
 			double number1 = left.asDouble();
 			double number2 = right.asDouble();
 			switch(this.operator) {
-				case '+': return new NumberValue(number1 + number2);
-				case '-': return new NumberValue(number1 - number2);
-				case '*': return new NumberValue(number1 * number2);
-				case '/': return new NumberValue(number1 / number2);
+				case "+": return new NumberValue(number1 + number2);
+				case "-": return new NumberValue(number1 - number2);
+				case "*": return new NumberValue(number1 * number2);
+				case "/": return new NumberValue(number1 / number2);
 				default: return new NumberValue(number1 + number2);
 			}
 		}

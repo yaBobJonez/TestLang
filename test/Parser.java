@@ -194,18 +194,18 @@ public class Parser {
 		Expression result = this.multiplication();
 		while(true){
 			if(this.matches(TokenList.TO_PLUS)){
-				result = new BinOpNode(result, '+', this.multiplication()); continue;
+				result = new BinOpNode(result, "+", this.multiplication()); continue;
 			} else if(this.matches(TokenList.TO_MINUS)){
-				result = new BinOpNode(result, '-', this.multiplication()); continue;
+				result = new BinOpNode(result, "-", this.multiplication()); continue;
 			} break;
 		} return result;
 	} public Expression multiplication() throws Exception{
 		Expression result = this.unary();
 		while(true){
 			if(this.matches(TokenList.TO_MULTIPLY)){
-				result = new BinOpNode(result, '*', this.unary()); continue;
+				result = new BinOpNode(result, "*", this.unary()); continue;
 			} else if(this.matches(TokenList.TO_DIVIDE)){
-				result = new BinOpNode(result, '/', this.unary()); continue;
+				result = new BinOpNode(result, "/", this.unary()); continue;
 			} break;
 		} return result;
 	} public Expression unary() throws Exception{
