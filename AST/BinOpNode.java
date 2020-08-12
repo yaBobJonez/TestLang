@@ -27,6 +27,12 @@ public class BinOpNode implements Expression {
 			switch(this.operator){
 				default: return new StringValue(str1 + str2);	//TODO simplify
 			}
+		} else if((left instanceof ArrayValue) && (right instanceof ArrayValue)){
+			ArrayValue str1 = (ArrayValue)left;
+			ArrayValue str2 = (ArrayValue)right;
+			switch(this.operator){
+				default: { str1.elements.addAll(str2.elements); return new ArrayValue(str1); }
+			}
 		} else if(left instanceof ArrayValue){
 			ArrayValue str1 = (ArrayValue)left;
 			String str2 = right.asString();
