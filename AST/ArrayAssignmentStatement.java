@@ -1,5 +1,7 @@
 package AST;
 
+import lib.*;
+
 public class ArrayAssignmentStatement implements Statement {
 	public ArrayAccessNode array;
 	public Expression value;
@@ -9,7 +11,12 @@ public class ArrayAssignmentStatement implements Statement {
 	}
 	@Override
 	public void execute() throws Exception {
-		this.array.getArray().set(this.array.lastIndex(), this.value.eval());
+		Value object = Variables.get(this.array.var);
+		if(object instanceof ArrayValue){
+			this.array.getArray().set(this.array.lastIndex(), this.value.eval());
+		} else if(object instanceof MapValue){
+			this.array.checkForMap(object).set(this.array.path.get(0).eval(), this.value.eval());
+		}
 	}
 	@Override
 	public String toString() {

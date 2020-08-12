@@ -22,7 +22,11 @@ public class ArrayAccessNode implements Expression {
 	public ArrayValue checkForArray(Value array) throws Exception{
 		if(array instanceof ArrayValue){
 			return (ArrayValue)array;
-		} else { throw new Exception("Not an array."); } //Refactor this class: unreadable :(
+		} else { throw new Exception("Not an array."); }
+	} public MapValue checkForMap(Value map) throws Exception{
+		if(map instanceof MapValue){
+			return (MapValue)map;
+		} else { throw new Exception("Not an array."); }
 	}
 	public ArrayValue getArray() throws Exception{
 		ArrayValue array = this.checkForArray(Variables.get(this.var));
