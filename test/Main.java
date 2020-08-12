@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("arr1 = {'test':'Hello world!', 2:'GOOD', true:'false'}; print arr1['test']; print arr1[2]; print arr1[true];");
+		Lexer lexer = new Lexer("function test(a, b) return a + b; print test(2, 5);");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);
