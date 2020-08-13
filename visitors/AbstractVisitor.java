@@ -48,6 +48,11 @@ public abstract class AbstractVisitor implements Visitor {
 		s.statement.accept(this);
 	}
 	@Override
+	public void visit(ForeachStatement s) throws Exception{
+		s.array.accept(this);
+		s.body.accept(this);
+	}
+	@Override
 	public void visit(FuncDefStatement s) throws Exception {
 		s.body.accept(this);
 	}

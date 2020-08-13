@@ -2,7 +2,7 @@ package lib;
 
 import java.util.*;
 
-public class ArrayValue implements Value {
+public class ArrayValue implements Value, Iterable<Value> {
 	public List<Value> elements;
 	public ArrayValue() {
 		this.elements = new ArrayList<>();
@@ -35,6 +35,10 @@ public class ArrayValue implements Value {
 	@Override
 	public boolean asBoolean() {
 		return true;
+	}
+	@Override
+	public Iterator<Value> iterator(){
+		return this.elements.iterator();
 	}
 	@Override
 	public int hashCode() {

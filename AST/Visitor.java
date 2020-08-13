@@ -12,6 +12,7 @@ public interface Visitor {
 	void visit(ContinueStatement s) throws Exception;
 	void visit(DoWhileStatement s) throws Exception;
 	void visit(ForStatement s) throws Exception;
+	void visit(ForeachStatement s) throws Exception;
 	void visit(FuncDefStatement s) throws Exception;
 	void visit(FunctionNode s) throws Exception;
 	void visit(FunctionStatement s) throws Exception;

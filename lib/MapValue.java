@@ -2,7 +2,7 @@ package lib;
 
 import java.util.*;
 
-public class MapValue implements Value {
+public class MapValue implements Value, Iterable<Map.Entry<Value, Value>> {
 	public Map<Value, Value> array;
 	public MapValue(Map<Value, Value> array) {
 		this.array = new HashMap<>();
@@ -31,6 +31,10 @@ public class MapValue implements Value {
 	@Override
 	public boolean asBoolean() {
 		return true;
+	}
+	@Override
+	public Iterator<Map.Entry<Value, Value>> iterator(){
+		return this.array.entrySet().iterator();
 	}
 	@Override
 	public int hashCode() {

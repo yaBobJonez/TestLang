@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("map = {0:'zero', 1:'one'}; print map; map[2] = 'two'; print map;"); //TODO arr[] — ability to append elements.
+		Lexer lexer = new Lexer("arr = [1, 2, 3]; foreach(num in arr) print num; map = {'1':'one', '2':'two', '3':'three'}; foreach(k:v in map) print k + ' - ' + v;");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);

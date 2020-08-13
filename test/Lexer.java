@@ -72,6 +72,7 @@ public class Lexer {
 			case "use": return new Token(TokenList.TA_USE, null);
 			case "case": return new Token(TokenList.TA_CASE, null);
 			case "new": return new Token(TokenList.TA_NEW, null);
+			case "in": return new Token(TokenList.TA_IN, null);
 			case "print": return new Token(TokenList.TI_OUT, null);
 			case "input": return new Token(TokenList.TI_IN, null);
 			case "try": return new Token(TokenList.TS_TRY, null);

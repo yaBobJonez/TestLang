@@ -26,6 +26,8 @@ public class Parser {
 			return this.ifElseState();
 		} else if(matches(TokenList.TS_FOR)){
 			return this.forState();
+		} else if(matches(TokenList.TS_FOREACH)){
+			return this.foreachState();
 		} else if(matches(TokenList.TS_WHILE)){
 			return this.whileState();
 		} else if(matches(TokenList.TS_DOWHILE)){
@@ -71,6 +73,17 @@ public class Parser {
 		this.consume(TokenList.TO_RPAR);
 		Statement actions = this.StateOrBlock();
 		return new ForStatement(init, cond, incr, actions);
+	} public Statement foreachState() throws Exception{
+		this.consume(TokenList.TO_LPAR);
+		String key = this.consume(TokenList.TS_ID).value;
+		String value = null;
+		if(this.matches(TokenList.TS_COLON)){
+			value = this.consume(TokenList.TS_ID).value;
+		} this.consume(TokenList.TA_IN);
+		Expression array = this.expression();
+		this.consume(TokenList.TO_RPAR);
+		Statement body = this.StateOrBlock();
+		return new ForeachStatement(key, value, array, body);
 	} public Statement whileState() throws Exception{
 		Expression cond = this.expression();
 		Statement actions = this.StateOrBlock();

@@ -37,7 +37,7 @@ public final class TokenList {
 	public static final String TA_USE = "USE";
 	public static final String TA_CASE = "CASE";
 	public static final String TA_NEW = "NEW";
-	public static final String TA_AS = "AS";
+	public static final String TA_IN = "IN"; //Formerly: TA_AS = "AS"
 	
 	public static final String TI_OUT = "OUTPUT";
 	public static final String TI_IN = "INPUT";
