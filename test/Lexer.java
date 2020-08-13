@@ -84,7 +84,16 @@ public class Lexer {
 		this.advance();
 		while(this.curr_char != (char)0){
 			if(this.curr_char == starter){ this.advance(); return new Token(TokenList.TT_STRING, string); }
-			else {
+			else if(this.curr_char == '\\'){
+				this.advance();
+				switch(this.curr_char){
+					case 'n': string += '\n'; this.advance(); break;
+					case 't': string += '\t'; this.advance(); break;
+					case 'b': string += '\b'; this.advance(); break;
+					case 'f': string += '\f'; this.advance(); break;
+					case '\\': string += '\\'; this.advance(); break;
+				}
+			} else {
 				string += this.curr_char; this.advance();
 			}
 		} return null;
