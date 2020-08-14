@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("print 'Hello\\n\\tworld!'; print 'A backslack is \\\\';");
+		Lexer lexer = new Lexer("print '100\\u2030 more \\u016Anicode!';");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);

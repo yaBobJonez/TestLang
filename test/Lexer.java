@@ -91,6 +91,14 @@ public class Lexer {
 					case 't': string += '\t'; this.advance(); break;
 					case 'b': string += '\b'; this.advance(); break;
 					case 'f': string += '\f'; this.advance(); break;
+					case 'u': {
+						this.advance(); String code = "";
+						for(int i = 0; i < 4; i++){
+							code += this.curr_char;
+							this.advance();
+						} string += (char)Integer.parseInt(code, 16);
+						break;
+					}
 					case '\\': string += '\\'; this.advance(); break;
 				}
 			} else {
