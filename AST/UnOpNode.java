@@ -13,6 +13,7 @@ public class UnOpNode implements Expression {
 	public Value eval() throws Exception {
 		switch(this.operator){
 			case '-': return new NumberValue(- this.right.eval().asDouble());
+			case '!': return new BooleanValue(this.right.eval().asBoolean() != false ? false : true);
 			default: return this.right.eval();
 		}
 	} public String toString(){

@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("print 'Split code: factor() +-> variable() +-> value().'");
+		Lexer lexer = new Lexer("print 17 % 3; if(!false) print 'True';");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);

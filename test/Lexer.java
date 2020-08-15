@@ -119,6 +119,7 @@ public class Lexer {
 			case "-": return new Token(TokenList.TO_MINUS, null);
 			case "*": return new Token(TokenList.TO_MULTIPLY, null);
 			case "/": return new Token(TokenList.TO_DIVIDE, null);
+			case "%": return new Token(TokenList.TO_MODULO, null);
 			case "?": return new Token(TokenList.TS_QUESTION, null);
 			case ":": return new Token(TokenList.TS_COLON, null);
 			case "->": return new Token(TokenList.TS_ACCESS, null);

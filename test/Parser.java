@@ -237,11 +237,15 @@ public class Parser {
 				result = new BinOpNode(result, "*", this.unary()); continue;
 			} else if(this.matches(TokenList.TO_DIVIDE)){
 				result = new BinOpNode(result, "/", this.unary()); continue;
+			} else if(this.matches(TokenList.TO_MODULO)){
+				result = new BinOpNode(result, "%", this.unary()); continue;
 			} break;
 		} return result;
 	} public Expression unary() throws Exception{
 		if(this.matches(TokenList.TO_MINUS)){
 			return new UnOpNode('-', this.factor());
+		} else if(this.matches(TokenList.TL_NOT)){
+			return new UnOpNode('!', this.factor());
 		} else { return this.factor(); }
 	}
 	public Expression factor() throws Exception{

@@ -48,6 +48,7 @@ public class BinOpNode implements Expression {
 				case "-": return new NumberValue(number1 - number2);
 				case "*": return new NumberValue(number1 * number2);
 				case "/": return new NumberValue(number1 / number2);
+				case "%": return new NumberValue(number1 % number2);
 				default: return new NumberValue(number1 + number2);
 			}
 		}
