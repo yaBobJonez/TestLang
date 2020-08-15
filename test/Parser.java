@@ -245,12 +245,16 @@ public class Parser {
 		} else { return this.factor(); }
 	}
 	public Expression factor() throws Exception{
+		if(matches(TokenList.TO_LPAR)){
+			Expression result = this.expression();
+			this.matches(TokenList.TO_RPAR);
+			return result;
+		} else if(matches(TokenList.TS_FUNCTION)){
+			return this.functionVariable();
+		} else return this.variable();
+	} public Expression variable() throws Exception{
 		Token curr_token = this.getToken(0);
-		if(matches(TokenList.TT_INT)){
-			return new ValueNode(Double.parseDouble(curr_token.value));
-		} else if(matches(TokenList.TT_DOUBLE)){
-			return new ValueNode(Double.parseDouble(curr_token.value));
-		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
+		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
 			return this.arrayElement();
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return this.function();
@@ -260,18 +264,19 @@ public class Parser {
 			return this.associativeArray();
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
+		} else if(matches(TokenList.TT_CONST)){
+			return new ConstantNode(curr_token);
+		} else return this.value();
+	} public Expression value() throws Exception{
+		Token curr_token = this.getToken(0);
+		if(matches(TokenList.TT_INT)){
+			return new ValueNode(Double.parseDouble(curr_token.value));
+		} else if(matches(TokenList.TT_DOUBLE)){
+			return new ValueNode(Double.parseDouble(curr_token.value));
 		} else if(matches(TokenList.TT_STRING)){
 			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
 			return new ValueNode(Boolean.parseBoolean(curr_token.value));
-		} else if(matches(TokenList.TS_FUNCTION)){
-			return this.functionVariable();
-		} else if(matches(TokenList.TO_LPAR)){
-			Expression result = this.expression();
-			this.matches(TokenList.TO_RPAR);
-			return result;
-		} else if(matches(TokenList.TT_CONST)){
-			return new ConstantNode(curr_token);
 		} else { throw new Exception("Unregistered/invalid expression."); }
 	}
 	public boolean matches(String type){

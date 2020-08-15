@@ -8,7 +8,7 @@ public class Main
 {
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		Lexer lexer = new Lexer("switch('hi'){ case 'no': print 'BAD'; case 'hi': print 'GOOD'; case 'yes': { print 'BAD,'; print 'but at least,'; print 'multiple statements...'; } }");
+		Lexer lexer = new Lexer("print 'Split code: factor() +-> variable() +-> value().'");
 		List<Token> lexres = lexer.tokenize();
 		//System.out.println(lexres);
 		Parser parser = new Parser(lexres);
