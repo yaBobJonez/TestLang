@@ -93,6 +93,10 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(SemicolonStatement s) {}
 	@Override
+	public void visit(SwitchStatement s) throws Exception {
+		s.search.accept(this);
+	}
+	@Override
 	public void visit(TernaryNode s) throws Exception {
 		s.condition.accept(this);
 		s.trueActions.accept(this);

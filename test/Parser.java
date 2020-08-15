@@ -2,6 +2,7 @@ package test;
 
 import java.util.*;
 import AST.*;
+import lib.CaseValue;
 import lib.UserFunction;
 
 public class Parser {
@@ -32,6 +33,8 @@ public class Parser {
 			return this.whileState();
 		} else if(matches(TokenList.TS_DOWHILE)){
 			return this.doWhileState();
+		} else if(matches(TokenList.TS_SWITCH)){
+			return this.switchState();
 		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
 		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
@@ -93,6 +96,16 @@ public class Parser {
 		this.consume(TokenList.TS_WHILE);
 		Expression cond = this.expression();
 		return new DoWhileStatement(actions, cond);
+	} public Statement switchState() throws Exception{
+		this.consume(TokenList.TO_LPAR);
+		Expression expr = this.expression();
+		this.consume(TokenList.TO_RPAR);
+		this.consume(TokenList.TO_LCURL);
+		List<CaseValue> cases = new ArrayList<>();
+		while(!this.matches(TokenList.TO_RCURL)){
+			cases.add(this.casePattern());
+			this.matches(TokenList.TS_SEMICOLON);
+		} return new SwitchStatement(expr, cases);
 	} public FunctionNode function() throws Exception{
 		String name = this.consume(TokenList.TS_ID).value;
 		this.consume(TokenList.TO_LPAR);
@@ -155,11 +168,16 @@ public class Parser {
 			elements.put(key, value);
 			matches(TokenList.TO_COMMA);
 		} return new MapNode(elements);
+	} public CaseValue casePattern() throws Exception{
+		this.consume(TokenList.TA_CASE);
+		Expression match = this.expression();
+		this.consume(TokenList.TS_COLON);
+		Statement body = this.StateOrBlock();
+		return new CaseValue(match, body);
 	}
 	public Expression expression() throws Exception{
 		return this.ternary();
-	}
-	public Expression ternary() throws Exception{
+	} public Expression ternary() throws Exception{
 		Expression result = this.logicDisjunction();
 		if(this.matches(TokenList.TS_QUESTION)){
 			Expression trueExpr = this.expression();
