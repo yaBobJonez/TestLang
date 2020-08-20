@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import exceptions.VariableDoesNotExistException;
+
 public class Variables {
 	public static Stack<Map<String, Value>> localvars;
 	public static Map<String, Value> variables;
@@ -17,7 +19,7 @@ public class Variables {
 		variables = localvars.pop();
 	}
 	public static Value get(String key) throws Exception{
-		if(!Variables.variables.containsKey(key)){ throw new Exception("Not defined variable: "+key); }
+		if(!Variables.variables.containsKey(key)){ throw new VariableDoesNotExistException(key); }
 		return Variables.variables.get(key);
 	} public static void set(String key, Value value){
 		Variables.variables.put(key, value);

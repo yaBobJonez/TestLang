@@ -1,5 +1,6 @@
 package AST;
 
+import exceptions.VariableDoesNotExistException;
 import lib.*;
 import test.Token;
 
@@ -10,7 +11,7 @@ public class VariableNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		if(!Variables.variables.containsKey(this.token.value)){ throw new Exception("Variable "+this.token.value+" doesn't exist."); }
+		if(!Variables.variables.containsKey(this.token.value)){ throw new VariableDoesNotExistException(this.token.value); }
 		return Variables.variables.get(this.token.value);
 	} public String toString(){
 		return String.valueOf(this.token);

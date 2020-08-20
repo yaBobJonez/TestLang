@@ -2,6 +2,7 @@ package test;
 
 import java.util.*;
 import AST.*;
+import exceptions.*;
 import lib.CaseValue;
 import lib.UserFunction;
 
@@ -56,7 +57,7 @@ public class Parser {
 			ArrayAccessNode array = this.arrayElement();
 			consume(TokenList.TS_ASSIGN);
 			return new ArrayAssignmentStatement(array, this.expression());
-		} else { throw new Exception("Unsupported statement."); }
+		} else { throw new UnsupportedStatementException(); }
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
 		Statement ifState = this.StateOrBlock();
@@ -239,6 +240,8 @@ public class Parser {
 				result = new BinOpNode(result, "/", this.unary()); continue;
 			} else if(this.matches(TokenList.TO_MODULO)){
 				result = new BinOpNode(result, "%", this.unary()); continue;
+			} else if(this.matches(TokenList.TO_POWER)){
+				result = new BinOpNode(result, "^", this.unary()); continue;
 			} break;
 		} return result;
 	} public Expression unary() throws Exception{
@@ -246,7 +249,7 @@ public class Parser {
 			return new UnOpNode('-', this.factor());
 		} else if(this.matches(TokenList.TL_NOT)){
 			return new UnOpNode('!', this.factor());
-		} else { return this.factor(); }
+		} return this.factor();
 	}
 	public Expression factor() throws Exception{
 		if(matches(TokenList.TO_LPAR)){
@@ -281,7 +284,7 @@ public class Parser {
 			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
 			return new ValueNode(Boolean.parseBoolean(curr_token.value));
-		} else { throw new Exception("Unregistered/invalid expression."); }
+		} else { throw new InvalidExpressionException(); }
 	}
 	public boolean matches(String type){
 		Token curr_token = this.getToken(0);
@@ -294,7 +297,7 @@ public class Parser {
 		return this.tokens.get(curr_position);
 	} public Token consume(String type) throws Exception{
 		Token curr_token = this.getToken(0);
-		if(curr_token.type != type){ throw new Exception("Unexpected token type."); }
+		if(curr_token.type != type){ throw new UnexpectedTokenException(type, curr_token); }
 		this.position += 1;
 		return curr_token;
 	}

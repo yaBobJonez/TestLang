@@ -1,5 +1,6 @@
 package AST;
 
+import exceptions.IllegalOperationException;
 import lib.*;
 
 public class BinOpNode implements Expression {
@@ -19,25 +20,29 @@ public class BinOpNode implements Expression {
 			String string = left.asString();
 			int times = right.asInteger();
 			switch(this.operator){
-				default: return new StringValue(new String(new char[times]).replace("\0", string));
+				case "*": return new StringValue(new String(new char[times]).replace("\0", string));
+				default: throw new IllegalOperationException(this.operator);
 			}
 		} else if((left instanceof StringValue) && (right instanceof StringValue)){
 			String str1 = left.asString();
 			String str2 = right.asString();
 			switch(this.operator){
-				default: return new StringValue(str1 + str2);	//TODO simplify
+				case ".": return new StringValue(str1 + str2);
+				default: throw new IllegalOperationException(this.operator);
 			}
 		} else if((left instanceof ArrayValue) && (right instanceof ArrayValue)){
 			ArrayValue str1 = (ArrayValue)left;
 			ArrayValue str2 = (ArrayValue)right;
 			switch(this.operator){
-				default: { str1.elements.addAll(str2.elements); return new ArrayValue(str1); }
+				case "+": { str1.elements.addAll(str2.elements); return new ArrayValue(str1); }
+				default: throw new IllegalOperationException(this.operator);
 			}
 		} else if(left instanceof ArrayValue){
 			ArrayValue str1 = (ArrayValue)left;
 			String str2 = right.asString();
 			switch(this.operator){
-				default: { str1.elements.add(new StringValue(str2)); return new ArrayValue(str1); }
+				case "+": { str1.elements.add(new StringValue(str2)); return new ArrayValue(str1); }
+				default: throw new IllegalOperationException(this.operator);
 			}
 		}
 		else {
@@ -49,7 +54,8 @@ public class BinOpNode implements Expression {
 				case "*": return new NumberValue(number1 * number2);
 				case "/": return new NumberValue(number1 / number2);
 				case "%": return new NumberValue(number1 % number2);
-				default: return new NumberValue(number1 + number2);
+				case "^": return new NumberValue(Math.pow(number1, number2));
+				default: throw new IllegalOperationException(this.operator);
 			}
 		}
 	} public String toString(){

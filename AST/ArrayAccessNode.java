@@ -3,6 +3,8 @@ package AST;
 import lib.*;
 import java.util.*;
 
+import exceptions.TypeConsumingException;
+
 public class ArrayAccessNode implements Expression {
 	public String var;
 	public List<Expression> path;
@@ -17,16 +19,16 @@ public class ArrayAccessNode implements Expression {
 			return this.getArray().get(this.lastIndex());
 		} else if(object instanceof MapValue){
 			return ((MapValue)object).array.get(this.path.get(0).eval());
-		} else throw new Exception("Not an array.");
+		} else throw new TypeConsumingException("array");
 	}
 	public ArrayValue checkForArray(Value array) throws Exception{
 		if(array instanceof ArrayValue){
 			return (ArrayValue)array;
-		} else { throw new Exception("Not an array."); }
+		} else throw new TypeConsumingException("array");
 	} public MapValue checkForMap(Value map) throws Exception{
 		if(map instanceof MapValue){
 			return (MapValue)map;
-		} else { throw new Exception("Not an array."); }
+		} else throw new TypeConsumingException("associative array");
 	}
 	public ArrayValue getArray() throws Exception{
 		ArrayValue array = this.checkForArray(Variables.get(this.var));

@@ -1,6 +1,7 @@
 package AST;
 
 import java.util.*;
+import exceptions.FunctionDoesNotExistException;
 import lib.*;
 
 public class FunctionNode implements Expression {
@@ -28,7 +29,7 @@ public class FunctionNode implements Expression {
 		else if(Variables.variables.containsKey(name)){
 			Value func = Variables.get(name);
 			if(func instanceof FunctionValue) return ((FunctionValue)func).value;
-		} throw new Exception("Function doesn't exist.");
+		} throw new FunctionDoesNotExistException(name);
 	}
 	public String toString(){
 		return "Function{name = " + this.name + "; args = " + this.args.toString() + "}";

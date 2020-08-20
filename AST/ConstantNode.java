@@ -1,5 +1,6 @@
 package AST;
 
+import exceptions.VariableDoesNotExistException;
 import lib.*;
 import test.Token;
 
@@ -10,7 +11,7 @@ public class ConstantNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		if(!Constants.constants.containsKey(this.token.value)){ throw new Exception("Constant "+this.token.value+" doesn't exist."); }
+		if(!Constants.constants.containsKey(this.token.value)){ throw new VariableDoesNotExistException(this.token.value); }
 		return Constants.constants.get(this.token.value);
 	} public String toString(){
 		return String.valueOf(this.token);

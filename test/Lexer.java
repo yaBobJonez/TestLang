@@ -1,6 +1,7 @@
 package test;
 
 import java.util.*;
+import exceptions.LexerException;
 import test.Token;
 import test.TokenList;
 
@@ -16,7 +17,7 @@ public class Lexer {
 	} public void advance(){
 		this.position += 1;
 		this.curr_char = (this.position < this.text.length()) ? this.text.toCharArray()[this.position] : (char)0;
-	} public List<Token> tokenize(){
+	} public List<Token> tokenize() throws Exception{
 		List<Token> tokens = new ArrayList<Token>();
 		while((this.curr_char != (char)0) && (this.position < this.text.length())){
 			if((this.curr_char == ' ') || (this.curr_char == '\n')){ this.advance(); }
@@ -33,7 +34,7 @@ public class Lexer {
 			else if(this.curr_char == '}') { tokens.add(new Token(TokenList.TO_RCURL, null)); this.advance(); }
 			else if(this.curr_char == ';') { tokens.add(new Token(TokenList.TS_SEMICOLON, null)); this.advance(); }
 			else if(this.curr_char == '#') { this.advance(); this.buildComment(); }
-			else { System.out.println("Illegal char: "+this.curr_char); this.advance(); }
+			else { char last = this.curr_char; this.advance(); throw new LexerException("Unrecognized character: " + last); }
 		}
 		tokens.add(new Token(TokenList.TS_EOF, null));
 		return tokens;
@@ -105,7 +106,7 @@ public class Lexer {
 				string += this.curr_char; this.advance();
 			}
 		} return null;
-	} public Token buildOperator(){
+	} public Token buildOperator() throws LexerException{
 		String operator = "";
 		while("=+-*/>?:^%,.!<&|".indexOf(this.curr_char) != -1){
 			operator += this.curr_char; this.advance();
@@ -120,6 +121,7 @@ public class Lexer {
 			case "*": return new Token(TokenList.TO_MULTIPLY, null);
 			case "/": return new Token(TokenList.TO_DIVIDE, null);
 			case "%": return new Token(TokenList.TO_MODULO, null);
+			case "^": return new Token(TokenList.TO_POWER, null);
 			case "?": return new Token(TokenList.TS_QUESTION, null);
 			case ":": return new Token(TokenList.TS_COLON, null);
 			case "->": return new Token(TokenList.TS_ACCESS, null);
@@ -134,7 +136,7 @@ public class Lexer {
 			case "<": return new Token(TokenList.TL_LESS, null);
 			case "&": return new Token(TokenList.TL_AND, null);
 			case "|": return new Token(TokenList.TL_OR, null);
-		} return null;
+		} throw new LexerException("Impossible error: lexer operator builder failure");
 	} public Token buildConstant(){
 		this.advance();
 		Token name = this.buildWord();

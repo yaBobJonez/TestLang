@@ -1,5 +1,6 @@
 package AST;
 
+import exceptions.IllegalOperationException;
 import lib.*;
 
 public class UnOpNode implements Expression {
@@ -14,7 +15,7 @@ public class UnOpNode implements Expression {
 		switch(this.operator){
 			case '-': return new NumberValue(- this.right.eval().asDouble());
 			case '!': return new BooleanValue(this.right.eval().asBoolean() != false ? false : true);
-			default: return this.right.eval();
+			default: throw new IllegalOperationException(String.valueOf(this.operator));
 		}
 	} public String toString(){
 		return "(" + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";

@@ -2,6 +2,7 @@ package lib;
 
 import java.util.*;
 import AST.*;
+import exceptions.ArgumentsMismatchException;
 
 public class UserFunction implements Function {
 	public List<String> args;
@@ -13,7 +14,7 @@ public class UserFunction implements Function {
 	@Override
 	public Value execute(Value... arguments) throws Exception{
 		int size = arguments.length;
-		if(size != this.args.size()) throw new Exception("Expected "+this.args.size()+" arguments.");
+		if(size != this.args.size()) throw new ArgumentsMismatchException(this.args.size());
 		try {
 			Variables.push();
 			for(int i = 0; i < size; i++){ Variables.set(this.getArg(i), arguments[i]); }

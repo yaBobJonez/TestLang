@@ -1,5 +1,6 @@
 package AST;
 
+import exceptions.IllegalOperationException;
 import lib.*;
 
 public class LogicNode implements Expression {
@@ -30,8 +31,8 @@ public class LogicNode implements Expression {
 			case "!=": return new BooleanValue(str1 != str2);
 			case "&": return new BooleanValue((str1 != 0) && (str2 != 0));
 			case "|": return new BooleanValue((str1 != 0) || (str2 != 0));
-			case "==":
-			default: return new BooleanValue(str1 == str2);
+			case "==": return new BooleanValue(str1 == str2);
+			default: throw new IllegalOperationException(this.operator);
 		}
 	} public String toString(){
 		return "(" + String.valueOf(this.left) + ", " + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";
