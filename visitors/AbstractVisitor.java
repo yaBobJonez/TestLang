@@ -58,6 +58,7 @@ public abstract class AbstractVisitor implements Visitor {
 	}
 	@Override
 	public void visit(FunctionNode s) throws Exception {
+		s.name.accept(this);
 		for(Expression arg : s.args){ arg.accept(this); }
 	}
 	@Override

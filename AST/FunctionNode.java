@@ -2,16 +2,17 @@ package AST;
 
 import java.util.*;
 import exceptions.FunctionDoesNotExistException;
+import exceptions.VariableDoesNotExistException;
 import lib.*;
 
 public class FunctionNode implements Expression {
-	public String name;
+	public Expression name;
 	public List<Expression> args;
-	public FunctionNode(String name, List<Expression> args) {
+	public FunctionNode(Expression name, List<Expression> args) { //May be not used.
 		this.name = name;
 		this.args = args;
 	}
-	public FunctionNode(String name) {
+	public FunctionNode(Expression name) {
 		this.name = name;
 		args = new ArrayList<>();
 	}
@@ -20,10 +21,18 @@ public class FunctionNode implements Expression {
 		int size = this.args.size();
 		Value[] argsValues = new Value[size];
 		for(int i = 0; i < size; i++){ argsValues[i] = this.args.get(i).eval(); }
-		return this.getFunction(this.name).execute(argsValues);
+		return this.consumeFunction(this.name).execute(argsValues);
 	}
 	public void addArg(Expression argument){
 		this.args.add(argument);
+	} public Function consumeFunction(Expression expr) throws Exception {
+		try {
+			Value value = expr.eval();
+			if(value instanceof FunctionValue) return ((FunctionValue)value).value;
+			else return this.getFunction(value.asString());
+		} catch(VariableDoesNotExistException e) {
+			return this.getFunction(e.name);
+		}
 	} public Function getFunction(String name) throws Exception {
 		if(Functions.exists(name)) return Functions.get(name);
 		else if(Variables.variables.containsKey(name)){

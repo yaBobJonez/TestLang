@@ -44,7 +44,7 @@ public class Parser {
 			return this.defineFunction();
 		}
 		else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return new FunctionStatement(this.function());
+			return new FunctionStatement(this.function(this.qualifiedName()));
 		}
 		return this.assignmentState();
 	}
@@ -107,10 +107,9 @@ public class Parser {
 			cases.add(this.casePattern());
 			this.matches(TokenList.TS_SEMICOLON);
 		} return new SwitchStatement(expr, cases);
-	} public FunctionNode function() throws Exception{
-		String name = this.consume(TokenList.TS_ID).value;
+	} public FunctionNode function(Expression varName) throws Exception{
 		this.consume(TokenList.TO_LPAR);
-		FunctionNode func = new FunctionNode(name);
+		FunctionNode func = new FunctionNode(varName);
 		while(!this.matches(TokenList.TO_RPAR)){
 			func.addArg(this.expression());
 			this.matches(TokenList.TO_COMMA);
@@ -260,20 +259,28 @@ public class Parser {
 			return this.functionVariable();
 		} else return this.variable();
 	} public Expression variable() throws Exception{
-		Token curr_token = this.getToken(0);
-		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
-			return this.arrayElement();
-		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return this.function();
-		} else if(this.getToken(0).type == TokenList.TO_LBRA){
+		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+			return this.function(new ValueNode(this.consume(TokenList.TS_ID).value));
+		}
+		Expression varName = this.qualifiedName();
+		if(varName != null){
+			if(this.getToken(0).type == TokenList.TO_LPAR) return this.function(varName);
+			else return varName;
+		}
+		if(this.getToken(0).type == TokenList.TO_LBRA){
 			return this.array();
 		} else if(this.getToken(0).type == TokenList.TO_LCURL){
 			return this.associativeArray();
+		} else return this.value();
+	} public Expression qualifiedName() throws Exception{
+		Token curr_token = this.getToken(0);
+		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
+			return this.arrayElement();
 		} else if(matches(TokenList.TS_ID)){
 			return new VariableNode(curr_token);
 		} else if(matches(TokenList.TT_CONST)){
 			return new ConstantNode(curr_token);
-		} else return this.value();
+		} else return null;
 	} public Expression value() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TT_INT)){
