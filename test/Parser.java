@@ -57,7 +57,7 @@ public class Parser {
 			ArrayAccessNode array = this.arrayElement();
 			consume(TokenList.TS_ASSIGN);
 			return new ArrayAssignmentStatement(array, this.expression());
-		} else { throw new UnsupportedStatementException(); }
+		} else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
 		Statement ifState = this.StateOrBlock();
@@ -291,7 +291,7 @@ public class Parser {
 			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
 			return new ValueNode(Boolean.parseBoolean(curr_token.value));
-		} else { throw new InvalidExpressionException(); }
+		} else { throw new InvalidExpressionException(this.getToken(0).toString()); }
 	}
 	public boolean matches(String type){
 		Token curr_token = this.getToken(0);

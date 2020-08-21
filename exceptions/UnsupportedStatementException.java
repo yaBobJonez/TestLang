@@ -2,10 +2,10 @@ package exceptions;
 
 @SuppressWarnings("serial")
 public class UnsupportedStatementException extends Exception{
-	public UnsupportedStatementException() {
-		super();
+	public UnsupportedStatementException(String str) {
+		super("Unsupported statement: " + str);
 	}
-	public UnsupportedStatementException(int line, int character) {
-		super("At line "+line + ", character "+character + ".");
+	public UnsupportedStatementException(String str, int line, int character) {
+		super("Unsupported statement: " + str + " at line "+line + ", character "+character + ".");
 	}
 }

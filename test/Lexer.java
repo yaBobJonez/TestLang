@@ -9,14 +9,18 @@ public class Lexer {
 	public String text;
 	public char curr_char;
 	public int position;
+	public int line, character;
 	public Lexer(String code){
 		this.text = code;
 		this.curr_char = (char)0;
 		this.position = -1;
+		this.line = this.character = 1;
 		this.advance();
 	} public void advance(){
 		this.position += 1;
 		this.curr_char = (this.position < this.text.length()) ? this.text.toCharArray()[this.position] : (char)0;
+		if(this.curr_char == '\n'){ this.line += 1; this.character = 1; }
+		else this.character += 1;
 	} public List<Token> tokenize() throws Exception{
 		List<Token> tokens = new ArrayList<Token>();
 		while((this.curr_char != (char)0) && (this.position < this.text.length())){
@@ -34,7 +38,7 @@ public class Lexer {
 			else if(this.curr_char == '}') { tokens.add(new Token(TokenList.TO_RCURL, null)); this.advance(); }
 			else if(this.curr_char == ';') { tokens.add(new Token(TokenList.TS_SEMICOLON, null)); this.advance(); }
 			else if(this.curr_char == '#') { this.advance(); this.buildComment(); }
-			else { char last = this.curr_char; this.advance(); throw new LexerException("Unrecognized character: " + last); }
+			else { char last = this.curr_char; this.advance(); throw new LexerException("Unrecognized character: " + last, this.line, this.character); }
 		}
 		tokens.add(new Token(TokenList.TS_EOF, null));
 		return tokens;
@@ -47,8 +51,8 @@ public class Lexer {
 				{ dot = true; number += "."; }
 			} else { number += this.curr_char; }
 			this.advance();
-		} if(dot == true){ return new Token(TokenList.TT_DOUBLE, number); }
-		else { return new Token(TokenList.TT_INT, number); }
+		} if(dot == true){ return new Token(TokenList.TT_DOUBLE, number, this.line, this.character); }
+		else { return new Token(TokenList.TT_INT, number, this.line, this.character); }
 	} public Token buildWord(){
 		String word = "";
 		while("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789".indexOf(this.curr_char) != -1){
@@ -78,7 +82,7 @@ public class Lexer {
 			case "input": return new Token(TokenList.TI_IN, null);
 			case "try": return new Token(TokenList.TS_TRY, null);
 			case "catch": return new Token(TokenList.TS_CATCH, null);
-			default: return new Token(TokenList.TS_ID, word);
+			default: return new Token(TokenList.TS_ID, word, this.line, this.character);
 		}
 	} public Token buildString(char starter){
 		String string = "";
@@ -136,7 +140,7 @@ public class Lexer {
 			case "<": return new Token(TokenList.TL_LESS, null);
 			case "&": return new Token(TokenList.TL_AND, null);
 			case "|": return new Token(TokenList.TL_OR, null);
-		} throw new LexerException("Impossible error: lexer operator builder failure");
+		} throw new LexerException("Unrecognized operator: "+operator, this.line, this.character);
 	} public Token buildConstant(){
 		this.advance();
 		Token name = this.buildWord();
