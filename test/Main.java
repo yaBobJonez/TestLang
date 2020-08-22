@@ -1,19 +1,41 @@
 package test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import AST.*;
 import visitors.FunctionsPresetter;
 
 public class Main
 {
-	public static void main (String[] args) throws java.lang.Exception
+	public static void main (String[] args) throws Exception
 	{
-		Lexer lexer = new Lexer("itsNotValid 2 + 2;");
+		//Testing purposes
+		if(args.length == 0){ run("print 'New runtime system!';", false, false); return; }
+		boolean tokens = false; boolean ast = false;
+		String input = fromFile(args[0]);
+		for(int i = 1; i < args.length; i++){
+			switch(args[i]){
+				case "-t":
+				case "-tokens": tokens = true; break;
+				case "-a":
+				case "-ast": ast = true; break;
+				default: throw new RuntimeException("Unknown argument.");
+			}
+		} run(input, tokens, ast);
+	}
+	
+	public static String fromFile(String path) throws IOException{
+		return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
+	}
+	public static void run(String input, boolean tokens, boolean ast) throws Exception{
+		Lexer lexer = new Lexer(input);
 		List<Token> lexres = lexer.tokenize();
-		//System.out.println(lexres);
+		if(tokens) System.out.println(lexres);
 		Parser parser = new Parser(lexres);
 		Statement parseres = parser.parse();
-		//System.out.println(parseres);
+		if(ast) System.out.println(parseres);
 		parseres.accept(new FunctionsPresetter());
 		parseres.execute();
 	}
