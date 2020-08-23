@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import AST.*;
+import lib.CallStack;
 import visitors.FunctionsPresetter;
 
 public class Main
@@ -12,7 +13,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("print 'New runtime system!';", false, false); return; }
+		if(args.length == 0){ run("print 'New runtime system!'; function wrong(){ print error; print 'hi'; } wrong();", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = fromFile(args[0]);
 		for(int i = 1; i < args.length; i++){
@@ -37,6 +38,16 @@ public class Main
 		Statement parseres = parser.parse();
 		if(ast) System.out.println(parseres);
 		parseres.accept(new FunctionsPresetter());
-		parseres.execute();
+		try {
+			parseres.execute();
+		} catch(Exception e) {
+			handleNegative(Thread.currentThread(), e);
+		}
+	}
+	public static void handleNegative(Thread thread, Throwable throwable){
+		System.err.print(throwable.getMessage() + " in thread " + thread.getName() + ".\nStacktrace:\n");
+		for(CallStack.Call call : CallStack.calls){
+			System.err.print("at " + call.output() + "\n");
+		} //throwable.printStackTrace(); //For testing purposes.
 	}
 }

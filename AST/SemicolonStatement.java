@@ -8,4 +8,8 @@ public class SemicolonStatement implements Statement {
 	public void accept(Visitor visitor) throws Exception {
 		visitor.visit(this);
 	}
+	@Override
+	public String toString() {
+		return "Semicolon";
+	}
 }

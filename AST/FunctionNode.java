@@ -21,7 +21,11 @@ public class FunctionNode implements Expression {
 		int size = this.args.size();
 		Value[] argsValues = new Value[size];
 		for(int i = 0; i < size; i++){ argsValues[i] = this.args.get(i).eval(); }
-		return this.consumeFunction(this.name).execute(argsValues);
+		Function func = this.consumeFunction(this.name);
+		CallStack.entry(this.name.toString(), func);
+		Value res = func.execute(argsValues);
+		CallStack.exit();
+		return res;
 	}
 	public void addArg(Expression argument){
 		this.args.add(argument);
