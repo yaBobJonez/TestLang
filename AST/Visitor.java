@@ -10,6 +10,7 @@ public interface Visitor {
 	void visit(BreakStatement s) throws Exception;
 	void visit(ConstantNode s);
 	void visit(ContinueStatement s) throws Exception;
+	void visit(DestructuringAssignmentStatement s) throws Exception;
 	void visit(DoWhileStatement s) throws Exception;
 	void visit(ForStatement s) throws Exception;
 	void visit(ForeachStatement s) throws Exception;

@@ -53,11 +53,23 @@ public class Parser {
 			String varName = this.consume(TokenList.TS_ID).value;
 			consume(TokenList.TS_ASSIGN);
 			return new AssignmentStatement(varName, this.expression());
-		} if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
 			ArrayAccessNode array = this.arrayElement();
 			consume(TokenList.TS_ASSIGN);
 			return new ArrayAssignmentStatement(array, this.expression());
+		} else if(this.getToken(0).type == TokenList.TO_LBRA){
+			return this.destructuringAssignment();
 		} else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
+	} public DestructuringAssignmentStatement destructuringAssignment() throws Exception{
+		this.consume(TokenList.TO_LBRA);
+		List<String> vars = new ArrayList<>();
+		do {
+			if(this.getToken(0).type == TokenList.TS_ID) vars.add(this.consume(TokenList.TS_ID).value);
+			else vars.add(null);
+			this.matches(TokenList.TO_COMMA);
+		} while(!this.matches(TokenList.TO_RBRA));
+		this.consume(TokenList.TS_ASSIGN);
+		return new DestructuringAssignmentStatement(vars, this.expression());
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
 		Statement ifState = this.StateOrBlock();
@@ -228,6 +240,8 @@ public class Parser {
 				result = new BinOpNode(result, "+", this.multiplication()); continue;
 			} else if(this.matches(TokenList.TO_MINUS)){
 				result = new BinOpNode(result, "-", this.multiplication()); continue;
+			} else if(this.matches(TokenList.TO_PERIOD)){
+				result = new BinOpNode(result, ".", this.multiplication()); continue;
 			} break;
 		} return result;
 	} public Expression multiplication() throws Exception{

@@ -13,7 +13,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("print 'New runtime system!'; function wrong(){ print error; print 'hi'; } wrong();", false, false); return; }
+		if(args.length == 0){ run("[var1, var2] = ['Destructuring ', 'assignment!']; print var1 . var2;", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = fromFile(args[0]);
 		for(int i = 1; i < args.length; i++){

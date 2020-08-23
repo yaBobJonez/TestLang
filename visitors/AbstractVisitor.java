@@ -36,6 +36,10 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(ContinueStatement s) {}
 	@Override
+	public void visit(DestructuringAssignmentStatement s) throws Exception {
+		s.expr.accept(this);
+	}
+	@Override
 	public void visit(DoWhileStatement s) throws Exception {
 		s.condition.accept(this);
 		s.statement.accept(this);
