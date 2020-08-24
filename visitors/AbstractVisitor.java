@@ -4,15 +4,6 @@ import AST.*;
 
 public abstract class AbstractVisitor implements Visitor {
 	@Override
-	public void visit(ArrayAccessNode s) throws Exception {
-		for(Expression index : s.path){ index.accept(this); }
-	}
-	@Override
-	public void visit(ArrayAssignmentStatement s) throws Exception {
-		s.array.accept(this);
-		s.value.accept(this);
-	}
-	@Override
 	public void visit(ArrayNode s) throws Exception {
 		for(Expression index : s.elements){ index.accept(this); }
 	}
@@ -31,6 +22,15 @@ public abstract class AbstractVisitor implements Visitor {
 	}
 	@Override
 	public void visit(BreakStatement s) {}
+	@Override
+	public void visit(ContainerAccessNode s) throws Exception {
+		for(Expression index : s.path){ index.accept(this); }
+	}
+	@Override
+	public void visit(ContainerAssignmentStatement s) throws Exception {
+		s.container.accept(this);
+		s.expr.accept(this);
+	}
 	@Override
 	public void visit(ConstantNode s) {}
 	@Override

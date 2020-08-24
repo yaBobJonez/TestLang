@@ -53,12 +53,14 @@ public class Parser {
 			String varName = this.consume(TokenList.TS_ID).value;
 			consume(TokenList.TS_ASSIGN);
 			return new AssignmentStatement(varName, this.expression());
-		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
-			ArrayAccessNode array = this.arrayElement();
-			consume(TokenList.TS_ASSIGN);
-			return new ArrayAssignmentStatement(array, this.expression());
 		} else if(this.getToken(0).type == TokenList.TO_LBRA){
 			return this.destructuringAssignment();
+		}
+		Expression varName = this.qualifiedName(); //Moves pointer 1 forward: a = b -> = b
+		if(this.getToken(0).type == TokenList.TS_ASSIGN && varName instanceof ContainerAccessNode){
+			consume(TokenList.TS_ASSIGN);
+			ContainerAccessNode conExpr = (ContainerAccessNode)varName;
+			return new ContainerAssignmentStatement(conExpr, this.expression());
 		} else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
 	} public DestructuringAssignmentStatement destructuringAssignment() throws Exception{
 		this.consume(TokenList.TO_LBRA);
@@ -154,16 +156,7 @@ public class Parser {
 			block.add(this.statement());
 		} return block;
 	}
-	public ArrayAccessNode arrayElement() throws Exception{
-		String varName = this.consume(TokenList.TS_ID).value;
-		List<Expression> path = new ArrayList<>();
-		do {
-			consume(TokenList.TO_LBRA);
-			path.add(this.expression());
-			consume(TokenList.TO_RBRA);
-		} while(this.getToken(0).type == TokenList.TO_LBRA);
-		return new ArrayAccessNode(varName, path);
-	} public Expression array() throws Exception{
+	public Expression array() throws Exception{
 		consume(TokenList.TO_LBRA);
 		List<Expression> elements = new ArrayList<>();
 		while(!this.matches(TokenList.TO_RBRA)){
@@ -288,13 +281,22 @@ public class Parser {
 		} else return this.value();
 	} public Expression qualifiedName() throws Exception{
 		Token curr_token = this.getToken(0);
-		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LBRA){
-			return this.arrayElement();
-		} else if(matches(TokenList.TS_ID)){
-			return new VariableNode(curr_token);
+		if(matches(TokenList.TS_ID)){
+			List<Expression> exponents = this.variableExponents();
+			if((exponents == null) || exponents.isEmpty()) return new VariableNode(curr_token);
+			return new ContainerAccessNode(curr_token.value, exponents);
 		} else if(matches(TokenList.TT_CONST)){
-			return new ConstantNode(curr_token);
+			List<Expression> exponents = this.variableExponents();
+			if((exponents == null) || exponents.isEmpty()) return new ConstantNode(curr_token);
+			return new ContainerAccessNode(curr_token.value, exponents);
 		} else return null;
+	} public List<Expression> variableExponents() throws Exception{
+		if(!(this.getToken(0).type == TokenList.TO_LBRA)/* && !(this.getToken(0).type == TokenList.TO_PERIOD)*/) return null;
+		List<Expression> exponents = new ArrayList<>();
+		while((this.getToken(0).type == TokenList.TO_LBRA)/* || (this.getToken(0).type == TokenList.TO_PERIOD)*/){
+			if(matches(TokenList.TO_LBRA)){ exponents.add(this.expression()); this.consume(TokenList.TO_RBRA); }
+			//else if(matches(TokenList.TO_PERIOD)){ Expression key = new ValueNode(this.consume(TokenList.TS_ID).value); exponents.add(key); }
+		} return exponents;
 	} public Expression value() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TT_INT)){

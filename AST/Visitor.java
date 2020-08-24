@@ -1,14 +1,14 @@
 package AST;
 
 public interface Visitor {
-	void visit(ArrayAccessNode s) throws Exception;
-	void visit(ArrayAssignmentStatement s) throws Exception;
 	void visit(ArrayNode s) throws Exception;
 	void visit(AssignmentStatement s) throws Exception;
 	void visit(BinOpNode s) throws Exception;
 	void visit(BlockStatement s) throws Exception;
 	void visit(BreakStatement s) throws Exception;
 	void visit(ConstantNode s);
+	void visit(ContainerAccessNode s) throws Exception;
+	void visit(ContainerAssignmentStatement s) throws Exception;
 	void visit(ContinueStatement s) throws Exception;
 	void visit(DestructuringAssignmentStatement s) throws Exception;
 	void visit(DoWhileStatement s) throws Exception;
