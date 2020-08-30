@@ -14,13 +14,13 @@ public class std implements Module {
 		});
 		//print Append
 		Functions.set("printA", args -> {
-			if(args.length != 1){ throw new ArgumentsMismatchException(1); }
+			if(args.length != 1){ throw new ArgumentsMismatchException(false, 1); }
 			System.out.print(args[0].asString());
 			return new BooleanValue(true);
 		});
 		//wait
 		Functions.set("wait", args -> {
-			if(args.length != 1){ throw new ArgumentsMismatchException(1); }
+			if(args.length != 1){ throw new ArgumentsMismatchException(false, 1); }
 			TimeUnit.MILLISECONDS.sleep(args[0].asInteger());
 			return new BooleanValue(true);
 		});

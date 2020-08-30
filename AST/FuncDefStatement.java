@@ -1,13 +1,12 @@
 package AST;
 
-import java.util.*;
 import lib.*;
 
 public class FuncDefStatement implements Statement {
 	public String name;
-	public List<String> args;
+	public Arguments args;
 	public Statement body;
-	public FuncDefStatement(String name, List<String> args, Statement body) {
+	public FuncDefStatement(String name, Arguments args, Statement body) {
 		this.name = name;
 		this.args = args;
 		this.body = body;

@@ -130,20 +130,12 @@ public class Parser {
 		} return func;
 	} public FuncDefStatement defineFunction() throws Exception{
 		String name = this.consume(TokenList.TS_ID).value;
-		this.consume(TokenList.TO_LPAR);
-		List<String> args = new ArrayList<>();
-		while(!this.matches(TokenList.TO_RPAR)){
-			args.add(this.consume(TokenList.TS_ID).value);
-			this.matches(TokenList.TO_COMMA);
-		} Statement body = this.StateOrBlock();
+		Arguments args = this.arguments();
+		Statement body = this.StateOrBlock();
 		return new FuncDefStatement(name, args, body);
-	} public ValueNode functionVariable() throws Exception{
-		this.consume(TokenList.TO_LPAR);
-		List<String> args = new ArrayList<>();
-		while(!this.matches(TokenList.TO_RPAR)){
-			args.add(this.consume(TokenList.TS_ID).value);
-			this.matches(TokenList.TO_COMMA);
-		} Statement body = this.StateOrBlock();
+	} public ValueNode functionVariable() throws Exception{ //TODO remove this method, insert directly.
+		Arguments args = this.arguments();
+		Statement body = this.StateOrBlock();
 		return new ValueNode(new UserFunction(args, body));
 	}
 	public Statement StateOrBlock() throws Exception{
@@ -179,6 +171,20 @@ public class Parser {
 		this.consume(TokenList.TS_COLON);
 		Statement body = this.StateOrBlock();
 		return new CaseValue(match, body);
+	} public Arguments arguments() throws Exception{
+		Arguments args = new Arguments();
+		boolean startsOpt = false;
+		this.consume(TokenList.TO_LPAR);
+		while(!this.matches(TokenList.TO_RPAR)){
+			String name = this.consume(TokenList.TS_ID).value;
+			if(this.matches(TokenList.TS_ASSIGN)){
+				startsOpt = true;
+				args.addOptional(name, this.variable());
+			} else if(!startsOpt){
+				args.addRequired(name);
+			} else throw new UnsupportedStatementException("a required argument cannot be added after an optional");
+			this.matches(TokenList.TO_COMMA);
+		} return args;
 	}
 	public Expression expression() throws Exception{
 		return this.ternary();
