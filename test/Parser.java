@@ -49,19 +49,11 @@ public class Parser {
 		return this.assignmentState();
 	}
 	public Statement assignmentState() throws Exception{
-		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TS_ASSIGN){
-			String varName = this.consume(TokenList.TS_ID).value;
-			consume(TokenList.TS_ASSIGN);
-			return new AssignmentStatement(varName, this.expression());
-		} else if(this.getToken(0).type == TokenList.TO_LBRA){
+		if(this.getToken(0).type == TokenList.TO_LBRA){
 			return this.destructuringAssignment();
-		}
-		Expression varName = this.qualifiedName(); //Moves pointer 1 forward: a = b -> = b
-		if(this.getToken(0).type == TokenList.TS_ASSIGN && varName instanceof ContainerAccessNode){
-			consume(TokenList.TS_ASSIGN);
-			ContainerAccessNode conExpr = (ContainerAccessNode)varName;
-			return new ContainerAssignmentStatement(conExpr, this.expression());
-		} else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
+		} Expression assignment = this.assign();
+		if(assignment != null) return new NodeStatement(assignment);
+		else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
 	} public DestructuringAssignmentStatement destructuringAssignment() throws Exception{
 		this.consume(TokenList.TO_LBRA);
 		List<String> vars = new ArrayList<>();
@@ -187,8 +179,28 @@ public class Parser {
 		} return args;
 	}
 	public Expression expression() throws Exception{
+		return this.assignment();
+	} public Expression assignment() throws Exception{
+		Expression assignment = this.assign();
+		if(assignment != null) return assignment;
 		return this.ternary();
-	} public Expression ternary() throws Exception{
+	} public Expression assign() throws Exception{
+		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TS_ASSIGN){
+			String var = this.consume(TokenList.TS_ID).value;
+			this.consume(TokenList.TS_ASSIGN);
+			Expression expr = this.expression();
+			return new AssignmentNode(var, expr);
+		} int pos = this.position;
+		Expression varName = this.qualifiedName(); //Alters position by one
+		if(this.getToken(0).type == TokenList.TS_ASSIGN && (varName instanceof ContainerAccessNode)){
+			this.consume(TokenList.TS_ASSIGN);
+			ContainerAccessNode container = (ContainerAccessNode)varName;
+			Expression expr = this.expression();
+			return new ContainerAssignmentNode(container, expr);
+		} this.position = pos;
+		return null;
+	}
+	public Expression ternary() throws Exception{
 		Expression result = this.logicDisjunction();
 		if(this.matches(TokenList.TS_QUESTION)){
 			Expression trueExpr = this.expression();

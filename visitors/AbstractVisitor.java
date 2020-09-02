@@ -8,7 +8,7 @@ public abstract class AbstractVisitor implements Visitor {
 		for(Expression index : s.elements){ index.accept(this); }
 	}
 	@Override
-	public void visit(AssignmentStatement s) throws Exception {
+	public void visit(AssignmentNode s) throws Exception {
 		s.expression.accept(this);
 	}
 	@Override
@@ -27,7 +27,7 @@ public abstract class AbstractVisitor implements Visitor {
 		for(Expression index : s.path){ index.accept(this); }
 	}
 	@Override
-	public void visit(ContainerAssignmentStatement s) throws Exception {
+	public void visit(ContainerAssignmentNode s) throws Exception {
 		s.container.accept(this);
 		s.expr.accept(this);
 	}
@@ -86,6 +86,10 @@ public abstract class AbstractVisitor implements Visitor {
 			key.accept(this);
 			s.elements.get(key).accept(this);
 		}
+	}
+	@Override
+	public void visit(NodeStatement s) throws Exception{
+		s.expr.accept(this);
 	}
 	@Override
 	public void visit(OutputStatement s) throws Exception {

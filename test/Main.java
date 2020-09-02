@@ -13,7 +13,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("function test(a = 2) print a ^ 3; test(1); test();", false, false); return; }
+		if(args.length == 0){ run("a = b = c = 2; print a + b + c;", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = fromFile(args[0]);
 		for(int i = 1; i < args.length; i++){
