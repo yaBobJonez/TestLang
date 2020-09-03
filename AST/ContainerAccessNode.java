@@ -5,7 +5,7 @@ import java.util.*;
 
 import exceptions.TypeConsumingException;
 
-public class ContainerAccessNode implements Expression {
+public class ContainerAccessNode implements Expression, Accessible {
 	public String var;
 	public List<Expression> path;
 	public ContainerAccessNode(String var, List<Expression> path) {
@@ -14,11 +14,20 @@ public class ContainerAccessNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
+		return this.get();
+	}
+	public Value get() throws Exception {
 		Value container = this.getContainer();
 		Value lastIndex = this.lastIndex();
 		if(container instanceof ArrayValue) return ((ArrayValue)container).get(lastIndex.asInteger());
 		else if(container instanceof MapValue) return ((MapValue)container).get(lastIndex);
-		else throw new TypeConsumingException("array");
+		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
+	} public Value set(Value value) throws Exception {
+		Value container = this.getContainer();
+		Value lastIndex = this.lastIndex();
+		if(container instanceof ArrayValue){ ((ArrayValue)container).set(lastIndex.asInteger(), value); return value; }
+		else if(container instanceof MapValue){ ((MapValue)container).set(lastIndex, value); return value; }
+		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	}
 	public Value getContainer() throws Exception{
 		Value container = Variables.get(this.var);

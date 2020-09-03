@@ -27,11 +27,6 @@ public abstract class AbstractVisitor implements Visitor {
 		for(Expression index : s.path){ index.accept(this); }
 	}
 	@Override
-	public void visit(ContainerAssignmentNode s) throws Exception {
-		s.container.accept(this);
-		s.expr.accept(this);
-	}
-	@Override
 	public void visit(ConstantNode s) {}
 	@Override
 	public void visit(ContinueStatement s) {}

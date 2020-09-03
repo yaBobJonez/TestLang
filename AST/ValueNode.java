@@ -15,6 +15,9 @@ public class ValueNode implements Expression {
 	} public ValueNode(Function value) {
 		this.value = new FunctionValue(value);
 	}
+	public ValueNode(Value value) {
+		this.value = value;
+	}
 	@Override
 	public Value eval() {
 		return this.value;

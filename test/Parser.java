@@ -185,20 +185,21 @@ public class Parser {
 		if(assignment != null) return assignment;
 		return this.ternary();
 	} public Expression assign() throws Exception{
-		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TS_ASSIGN){
-			String var = this.consume(TokenList.TS_ID).value;
-			this.consume(TokenList.TS_ASSIGN);
-			Expression expr = this.expression();
-			return new AssignmentNode(var, expr);
-		} int pos = this.position;
-		Expression varName = this.qualifiedName(); //Alters position by one
-		if(this.getToken(0).type == TokenList.TS_ASSIGN && (varName instanceof ContainerAccessNode)){
-			this.consume(TokenList.TS_ASSIGN);
-			ContainerAccessNode container = (ContainerAccessNode)varName;
-			Expression expr = this.expression();
-			return new ContainerAssignmentNode(container, expr);
-		} this.position = pos;
-		return null;
+		int pos = this.position;
+		Expression target = this.qualifiedName(); //Alters position by one
+		if((target == null) || !(target instanceof Accessible)){ this.position = pos; return null; }
+		String type = this.getToken(0).type;
+		String operator;
+		switch(type){
+			case TokenList.TS_ASSIGN: operator = null; break;
+			case TokenList.TS_PLUSASSIGN: operator = "+"; break;
+			case TokenList.TS_MINUSASSING: operator = "-"; break;
+			case TokenList.TS_MULTIPLYASSIGN: operator = "*"; break;
+			case TokenList.TS_DIVIDEASSIGN: operator = "/"; break;
+			default: this.position = pos; return null;
+		} this.matches(type);
+		Expression expr = this.expression();
+		return new AssignmentNode((Accessible)target, operator, expr);
 	}
 	public Expression ternary() throws Exception{
 		Expression result = this.logicDisjunction();
