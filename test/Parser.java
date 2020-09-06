@@ -10,15 +10,37 @@ public class Parser {
 	public List<Token> tokens;
 	public int size;
 	public int position;
+	public ParseErrors parseErrors;
 	public Parser(List<Token> tokens) {
 		this.tokens = tokens;
 		this.size = tokens.size();
+		this.parseErrors = new ParseErrors();
 	}
 	public Statement parse() throws Exception{
+		this.parseErrors.errors.clear();
 		BlockStatement result = new BlockStatement();
 		while(!this.matches(TokenList.TS_EOF)){
-			result.add(this.statement());
+			try {
+				result.add(this.statement());
+			} catch(Exception e) {
+				this.parseErrors.add(e, this.errorLine());
+				this.recover();
+			}
 		} return result;
+	} public int errorLine(){
+		if(this.size == 0) return 0;
+		else if(this.position >= this.size) return this.tokens.get(this.size - 1).line;
+		else return this.tokens.get(this.position).line;
+	} public void recover(){
+		int prevPos = this.position;
+		for(int i = prevPos; i < this.size; i++){
+			this.position = i;
+			try {
+				this.statement();
+				this.position = i;
+				return;
+			} catch(Exception e){}
+		}
 	}
 	public Statement statement() throws Exception{
 		if(matches(TokenList.TS_SEMICOLON)){ return new SemicolonStatement(); }

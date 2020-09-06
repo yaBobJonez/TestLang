@@ -13,7 +13,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("a = 2; a += 3; print a;", false, false); return; }
+		if(args.length == 0){ run("print WRONG; print 'Error, var doesnt exist!';", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = fromFile(args[0]);
 		for(int i = 1; i < args.length; i++){
@@ -37,6 +37,10 @@ public class Main
 		Parser parser = new Parser(lexres);
 		Statement parseres = parser.parse();
 		if(ast) System.out.println(parseres);
+		if(parser.parseErrors.hasErrors()){
+			System.out.println(parser.parseErrors);
+			System.exit(1);
+		}
 		parseres.accept(new FunctionsPresetter());
 		try {
 			parseres.execute();
