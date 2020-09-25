@@ -4,10 +4,8 @@ import lib.*;
 
 public class ValueNode implements Expression {
 	public Value value;
-	public ValueNode(double value) {
+	public ValueNode(Number value) {
 		this.value = new NumberValue(value);
-	} public ValueNode(int value) {
-		this.value = new NumberValue((double)value);
 	} public ValueNode(String value) {
 		this.value = new StringValue(value);
 	} public ValueNode(boolean value) {

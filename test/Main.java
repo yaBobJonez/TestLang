@@ -13,7 +13,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("print WRONG; print 'Error, var doesnt exist!';", false, false); return; }
+		if(args.length == 0){ run("print 23 + 2;", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = fromFile(args[0]);
 		for(int i = 1; i < args.length; i++){

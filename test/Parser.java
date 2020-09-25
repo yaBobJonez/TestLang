@@ -341,9 +341,16 @@ public class Parser {
 	} public Expression value() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TT_INT)){
-			return new ValueNode(Double.parseDouble(curr_token.value));
+			Number num;
+			try { num = Short.parseShort(curr_token.value); }
+			catch(NumberFormatException e) {
+				try { num = Integer.parseInt(curr_token.value); }
+				catch(NumberFormatException e2) {
+					num = Long.parseLong(curr_token.value); //TODO Out Of Bounds Exception
+				}
+			} return new ValueNode(num);
 		} else if(matches(TokenList.TT_DOUBLE)){
-			return new ValueNode(Double.parseDouble(curr_token.value));
+			return new ValueNode(Double.parseDouble(curr_token.value)); //TODO float
 		} else if(matches(TokenList.TT_STRING)){
 			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
