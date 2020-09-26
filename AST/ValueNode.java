@@ -12,6 +12,11 @@ public class ValueNode implements Expression {
 		this.value = new BooleanValue(value);
 	} public ValueNode(Function value) {
 		this.value = new FunctionValue(value);
+	} public ValueNode(Object value) {
+		if(value.equals("nan")) this.value = new NanValue();
+		else if(value.equals((Object)Double.POSITIVE_INFINITY)) this.value = new InfinityValue(false);
+		else if(value.equals((Object)Double.NEGATIVE_INFINITY)) this.value = new InfinityValue(true);
+		else this.value = new NullValue();
 	}
 	public ValueNode(Value value) {
 		this.value = value;

@@ -355,6 +355,10 @@ public class Parser {
 			return new ValueNode(curr_token.value);
 		} else if(matches(TokenList.TT_BOOL)){
 			return new ValueNode(Boolean.parseBoolean(curr_token.value));
+		} else if(matches(TokenList.TT_NULL)){
+			return new ValueNode((Object)"null");
+		} else if(matches(TokenList.TT_INF)){
+			return new ValueNode((Object)Double.POSITIVE_INFINITY);
 		} else { throw new InvalidExpressionException(this.getToken(0).toString()); }
 	}
 	public boolean matches(String type){

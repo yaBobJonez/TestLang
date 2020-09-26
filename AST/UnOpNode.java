@@ -13,7 +13,11 @@ public class UnOpNode implements Expression {
 	@Override
 	public Value eval() throws Exception {
 		switch(this.operator){
-			case '-': return new NumberValue(- this.right.eval().asDouble());
+			case '-': 
+				if(this.right.eval() instanceof InfinityValue){
+					if( ((InfinityValue)this.right.eval()).negative == false ) return new InfinityValue(true);
+					else return new InfinityValue(false);
+				} return new NumberValue(- this.right.eval().asDouble());
 			case '!': return new BooleanValue(this.right.eval().asBoolean() != false ? false : true);
 			default: throw new IllegalOperationException(String.valueOf(this.operator));
 		}

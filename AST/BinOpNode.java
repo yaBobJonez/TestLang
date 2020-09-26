@@ -16,7 +16,15 @@ public class BinOpNode implements Expression {
 	public Value eval() throws Exception {
 		Value left = this.left.eval();
 		Value right = this.right.eval();
-		if((left instanceof StringValue) && (right instanceof NumberValue)){
+		if(left instanceof InfinityValue || right instanceof InfinityValue){
+			switch(this.operator){
+				default: return new InfinityValue(false);
+			}
+		} else if(left instanceof NullValue || right instanceof NullValue){
+			switch(this.operator){
+				default: throw new IllegalOperationException("null value detected");
+			}
+		} else if((left instanceof StringValue) && (right instanceof NumberValue)){
 			String string = left.asString();
 			int times = right.asInteger();
 			switch(this.operator){
@@ -52,7 +60,10 @@ public class BinOpNode implements Expression {
 				case "+": return new NumberValue(number1 + number2);
 				case "-": return new NumberValue(number1 - number2);
 				case "*": return new NumberValue(number1 * number2);
-				case "/": return new NumberValue(number1 / number2);
+				case "/": 
+					if(number2 == 0.0 && number1 == 0.0) return new NanValue();
+					else if(number2 == 0.0) return new NullValue();
+					return new NumberValue(number1 / number2);
 				case "%": return new NumberValue(number1 % number2);
 				case "^": return new NumberValue(Math.pow(number1, number2));
 				default: throw new IllegalOperationException(this.operator);
