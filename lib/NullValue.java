@@ -18,6 +18,10 @@ public class NullValue implements Value {
 		return false;
 	}
 	@Override
+	public Object asRaw() {
+		return null;
+	}
+	@Override
 	public String toString() {
 		return "null";
 	}

@@ -16,7 +16,7 @@ public class UseStatement implements Statement {
 	public void execute() throws Exception {
 		try{
 			String additPath = this.name.eval().asString();
-			Module module = (Module)Class.forName(this.basePath + additPath).newInstance();
+			Module module = (Module)Class.forName(this.basePath + additPath).getDeclaredConstructor().newInstance();
 			module.initialize();
 		} catch(Exception e) {}
 	}

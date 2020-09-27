@@ -1,8 +1,5 @@
 package test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import AST.*;
 import lib.CallStack;
@@ -13,9 +10,9 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("print 23 + inf; print 2 / 0; print 0 / 0; print -inf; print 2 + null;", false, false); return; }
+		if(args.length == 0){ run("use 'std'; print 'A'; wait(1000); print 'B'; include 'anotherFile.txt';", false, false); return; }
 		boolean tokens = false; boolean ast = false;
-		String input = fromFile(args[0]);
+		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){
 				case "-t":
@@ -25,10 +22,6 @@ public class Main
 				default: throw new RuntimeException("Unknown argument.");
 			}
 		} run(input, tokens, ast);
-	}
-	
-	public static String fromFile(String path) throws IOException{
-		return new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
 	}
 	public static void run(String input, boolean tokens, boolean ast) throws Exception{
 		Lexer lexer = new Lexer(input);

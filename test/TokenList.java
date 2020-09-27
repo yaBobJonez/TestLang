@@ -29,7 +29,7 @@ public final class TokenList {
 	public static final String TS_SEMICOLON = "SEMICOLON";
 	public static final String TS_FUNCTION = "FUNCTION";
 	public static final String TS_SWITCH = "SWITCH";
-	public static final String TS_IMPORT = "IMPORT";
+	public static final String TS_INCLUDE = "INCLUDE"; //Formerly: TS_IMPORT = "IMPORT"
 	public static final String TS_CLASS = "CLASS";
 	public static final String TS_TRY = "TRY";
 	public static final String TS_CATCH = "CATCH";

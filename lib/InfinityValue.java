@@ -25,6 +25,10 @@ public class InfinityValue implements Value {
 		return true;
 	}
 	@Override
+	public Object asRaw() {
+		return this.asDouble();
+	}
+	@Override
 	public String toString() {
 		return this.asString();
 	}

@@ -62,6 +62,7 @@ public class Parser {
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
 		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
 		else if(matches(TokenList.TA_USE)){ return new UseStatement(this.expression()); }
+		else if(matches(TokenList.TS_INCLUDE)){ return new IncludeStatement(this.expression()); }
 		else if(matches(TokenList.TS_FUNCTION)){
 			return this.defineFunction();
 		}

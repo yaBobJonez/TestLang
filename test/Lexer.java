@@ -2,8 +2,6 @@ package test;
 
 import java.util.*;
 import exceptions.LexerException;
-import test.Token;
-import test.TokenList;
 
 public class Lexer {
 	public String text;
@@ -72,7 +70,7 @@ public class Lexer {
 			case "nan": return new Token(TokenList.TT_NAN, null);
 			case "function": return new Token(TokenList.TS_FUNCTION, null);
 			case "switch": return new Token(TokenList.TS_SWITCH, null);
-			case "import": return new Token(TokenList.TS_IMPORT, null);
+			case "include": return new Token(TokenList.TS_INCLUDE, null);
 			case "class": return new Token(TokenList.TS_CLASS, null);
 			case "break": return new Token(TokenList.TA_BREAK, null);
 			case "continue": return new Token(TokenList.TA_CONTINUE, null);

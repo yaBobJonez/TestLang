@@ -33,6 +33,10 @@ public class MapValue implements Value, Iterable<Map.Entry<Value, Value>> {
 		return true;
 	}
 	@Override
+	public Object asRaw() {
+		return this.array;
+	}
+	@Override
 	public Iterator<Map.Entry<Value, Value>> iterator(){
 		return this.array.entrySet().iterator();
 	}

@@ -30,6 +30,10 @@ public class StringValue implements Value {
 		catch(Exception $e) { return false; }
 	}
 	@Override
+	public Object asRaw() {
+		return this.value;
+	}
+	@Override
 	public int hashCode() {
 		return 23 * 7 + Objects.hashCode(this.value);
 	}

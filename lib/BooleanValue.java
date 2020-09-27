@@ -26,6 +26,10 @@ public class BooleanValue implements Value {
 		return this.value;
 	}
 	@Override
+	public Object asRaw() {
+		return this.value;
+	}
+	@Override
 	public int hashCode() {
 		final int prime = 79;
 		int result = 1;

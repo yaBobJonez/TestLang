@@ -25,6 +25,10 @@ public class CaseValue implements Value {
 	public boolean asBoolean() {
 		return true;
 	}
+	@Override
+	public Object asRaw() {
+		return this.match;
+	}
 	public String toString() {
 		return this.asString();
 	}

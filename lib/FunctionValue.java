@@ -22,6 +22,10 @@ public class FunctionValue implements Value {
 		return true;
 	}
 	@Override
+	public Object asRaw() {
+		return this.value;
+	}
+	@Override
 	public int hashCode() {
 		return 59 * 1 + ((value == null) ? 0 : value.hashCode());
 	}

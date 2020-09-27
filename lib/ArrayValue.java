@@ -37,6 +37,10 @@ public class ArrayValue implements Value, Iterable<Value> {
 		return true;
 	}
 	@Override
+	public Object asRaw() {
+		return this.elements;
+	}
+	@Override
 	public Iterator<Value> iterator(){
 		return this.elements.iterator();
 	}

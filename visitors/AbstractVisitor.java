@@ -71,6 +71,10 @@ public abstract class AbstractVisitor implements Visitor {
 		if(s.elseStatement != null) s.elseStatement.accept(this);
 	}
 	@Override
+	public void visit(IncludeStatement s) throws Exception {
+		s.expr.accept(this);
+	}
+	@Override
 	public void visit(LogicNode s) throws Exception {
 		s.left.accept(this);
 		s.right.accept(this);

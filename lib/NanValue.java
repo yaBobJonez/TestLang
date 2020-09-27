@@ -18,6 +18,10 @@ public class NanValue implements Value {
 		return false;
 	}
 	@Override
+	public Object asRaw() {
+		return Double.NaN;
+	}
+	@Override
 	public String toString() {
 		return "nan";
 	}
