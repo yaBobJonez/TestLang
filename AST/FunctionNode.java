@@ -39,7 +39,7 @@ public class FunctionNode implements Expression {
 		}
 	} public Function getFunction(String name) throws Exception {
 		if(Functions.exists(name)) return Functions.get(name);
-		else if(Variables.variables.containsKey(name)){
+		else if(Variables.exists(name)){
 			Value func = Variables.get(name);
 			if(func instanceof FunctionValue) return ((FunctionValue)func).value;
 		} throw new FunctionDoesNotExistException(name);

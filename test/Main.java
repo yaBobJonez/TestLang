@@ -10,7 +10,7 @@ public class Main
 	public static void main (String[] args) throws Exception
 	{
 		//Testing purposes
-		if(args.length == 0){ run("use 'std'; print 'A'; wait(1000); print 'B'; include 'anotherFile.txt';", false, false); return; }
+		if(args.length == 0){ run("a = 1; b = 'hi'; function test(b){ a = 2; print a; print b; } print a; print b; test('well'); print a; print b;", false, false); return; }
 		boolean tokens = false; boolean ast = false;
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){

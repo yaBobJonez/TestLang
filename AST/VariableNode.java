@@ -14,11 +14,11 @@ public class VariableNode implements Expression, Accessible {
 		return this.get();
 	}
 	public Value get() throws Exception {
-		if(!Variables.variables.containsKey(this.token.value)){ 
+		if(!Variables.exists(this.token.value)){ 
 			throw new VariableDoesNotExistException(this.token.value);
-		} return Variables.variables.get(this.token.value);
+		} return Variables.get(this.token.value);
 	} public Value set(Value value) throws Exception {
-		Variables.set(this.token.value, value);
+		Variables.define(this.token.value, value);
 		return value;
 	}
 	public String toString(){

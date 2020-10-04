@@ -23,7 +23,7 @@ public class DestructuringAssignmentStatement implements Statement {
 	public void executeArray(ArrayValue array){
 		for(int i = 0; i < this.variables.size(); i++){
 			String var = this.variables.get(i);
-			if(var != null) Variables.set(var, array.get(i));
+			if(var != null) Variables.define(var, array.get(i));
 		}
 	} public void executeMap(MapValue map){
 		int i = 0;
@@ -32,7 +32,7 @@ public class DestructuringAssignmentStatement implements Statement {
 			if(var != null){
 				List<Value> list = new ArrayList<>();
 				list.add(entry.getKey()); list.add(entry.getValue());
-				Variables.set(var, new ArrayValue(list));
+				Variables.define(var, new ArrayValue(list));
 			} i += 1;
 		}
 	}

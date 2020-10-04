@@ -33,7 +33,7 @@ public class Parser {
 		else return this.tokens.get(this.position).line;
 	} public void recover(){
 		int prevPos = this.position;
-		for(int i = prevPos; i < this.size; i++){
+		for(int i = prevPos; i <= this.size; i++){
 			this.position = i;
 			try {
 				this.statement();

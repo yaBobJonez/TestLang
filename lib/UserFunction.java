@@ -19,10 +19,10 @@ public class UserFunction implements Function {
 		if(givenNum > totalNum) throw new ArgumentsMismatchException(false, totalNum, givenNum);
 		try {
 			Variables.push();
-			for(int i = 0; i < givenNum; i++){ Variables.set(this.getArg(i), arguments[i]); }
+			for(int i = 0; i < givenNum; i++){ Variables.define(this.getArg(i), arguments[i]); }
 			for(int i = givenNum; i < totalNum;	i++){
 				Argument arg = this.args.args.get(i);
-				Variables.set(arg.name, arg.value.eval());
+				Variables.define(arg.name, arg.value.eval());
 			}
 			this.body.execute();
 			return new BooleanValue(true);

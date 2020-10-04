@@ -20,14 +20,14 @@ public class ForeachStatement implements Statement {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void execute() throws Exception {
-		Value prevVarKey = Variables.variables.containsKey(this.key) ? Variables.get(this.key) : null;
+		Value prevVarKey = Variables.exists(this.key) ? Variables.get(this.key) : null;
 		Value prevVarValue = null;
-		if(this.value != null){ prevVarValue = Variables.variables.containsKey(this.value) ? Variables.get(this.value) : null; }
+		if(this.value != null){ prevVarValue = Variables.exists(this.value) ? Variables.get(this.value) : null; }
 		if(this.value != null){
 			Iterable<Map.Entry<Value, Value>> iterator = (Iterable<Map.Entry<Value, Value>>)this.array.eval();
 			for(Map.Entry<Value, Value> entry : iterator){
-				Variables.set(this.key, entry.getKey());
-				Variables.set(this.value, entry.getValue());
+				Variables.define(this.key, entry.getKey());
+				Variables.define(this.value, entry.getValue());
 				try {
 					this.body.execute();
 				} catch(BreakStatement e) {
