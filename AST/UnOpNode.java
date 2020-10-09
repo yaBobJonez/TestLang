@@ -3,7 +3,7 @@ package AST;
 import exceptions.IllegalOperationException;
 import lib.*;
 
-public class UnOpNode implements Expression {
+public class UnOpNode implements Expression { //TODO refactor
 	public char operator;
 	public Expression right;
 	public UnOpNode(char operator, Expression right) {

@@ -6,6 +6,12 @@ import exceptions.*;
 import lib.CaseValue;
 import lib.UserFunction;
 
+/*
+ * In Memory of my loved Grandmother,
+ * who passed away 10/05/2020...
+ * Rest Easy, It won't get worse...
+ */
+
 public class Parser {
 	public List<Token> tokens;
 	public int size;
@@ -67,7 +73,7 @@ public class Parser {
 			return this.defineFunction();
 		}
 		else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return new FunctionStatement(this.function(this.qualifiedName()));
+			return new NodeStatement(this.functionChain(this.qualifiedName()));
 		}
 		return this.assignmentState();
 	}
@@ -143,6 +149,17 @@ public class Parser {
 			func.addArg(this.expression());
 			this.matches(TokenList.TO_COMMA);
 		} return func;
+	} public Expression functionChain(Expression varName) throws Exception{
+		Expression expr = this.function(varName);
+		if(this.getToken(0).type == TokenList.TO_LPAR){
+			return this.functionChain(expr);
+		}
+		else if(this.getToken(0).type == TokenList.TS_ACCESS){
+			List<Expression> exponents = this.arrayExponents();
+			if(exponents != null | exponents.isEmpty()) return expr;
+			if(this.getToken(0).type == TokenList.TO_LPAR) return this.functionChain(new ContainerAccessNode(expr, exponents));
+			else return new ContainerAccessNode(expr, exponents);
+		} return expr;
 	} public FuncDefStatement defineFunction() throws Exception{
 		String name = this.consume(TokenList.TS_ID).value;
 		Arguments args = this.arguments();
@@ -309,11 +326,11 @@ public class Parser {
 		} else return this.variable();
 	} public Expression variable() throws Exception{
 		if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
-			return this.function(new ValueNode(this.consume(TokenList.TS_ID).value));
+			return this.functionChain(new ValueNode(this.consume(TokenList.TS_ID).value));
 		}
 		Expression varName = this.qualifiedName();
 		if(varName != null){
-			if(this.getToken(0).type == TokenList.TO_LPAR) return this.function(varName);
+			if(this.getToken(0).type == TokenList.TO_LPAR) return this.functionChain(varName);
 			else return varName;
 		}
 		if(this.getToken(0).type == TokenList.TO_LBRA){
@@ -324,20 +341,24 @@ public class Parser {
 	} public Expression qualifiedName() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TS_ID)){
-			List<Expression> exponents = this.variableExponents();
+			List<Expression> exponents = this.arrayExponents();
 			if((exponents == null) || exponents.isEmpty()) return new VariableNode(curr_token);
-			return new ContainerAccessNode(curr_token.value, exponents);
+			return new ContainerAccessNode(curr_token, exponents);
 		} else if(matches(TokenList.TT_CONST)){
-			List<Expression> exponents = this.variableExponents();
+			List<Expression> exponents = this.arrayExponents();
 			if((exponents == null) || exponents.isEmpty()) return new ConstantNode(curr_token);
-			return new ContainerAccessNode(curr_token.value, exponents);
+			return new ContainerAccessNode(curr_token, exponents);
 		} else return null;
-	} public List<Expression> variableExponents() throws Exception{
-		if(!(this.getToken(0).type == TokenList.TO_LBRA)/* && !(this.getToken(0).type == TokenList.TO_PERIOD)*/) return null;
+	} public List<Expression> arrayExponents() throws Exception{
+		if(!(this.getToken(0).type == TokenList.TO_LBRA) /*|| !(this.getToken(0).type == TokenList.TS_ACCESS)*/) return null;
 		List<Expression> exponents = new ArrayList<>();
-		while((this.getToken(0).type == TokenList.TO_LBRA)/* || (this.getToken(0).type == TokenList.TO_PERIOD)*/){
+		while(this.getToken(0).type == TokenList.TO_LBRA /*|| this.getToken(0).type == TokenList.TS_ACCESS*/){
 			if(matches(TokenList.TO_LBRA)){ exponents.add(this.expression()); this.consume(TokenList.TO_RBRA); }
-			//else if(matches(TokenList.TO_PERIOD)){ Expression key = new ValueNode(this.consume(TokenList.TS_ID).value); exponents.add(key); }
+			/*else if(matches(TokenList.TS_ACCESS)){
+				String name = this.consume(TokenList.TS_ID).value;
+				Expression key = new ValueNode(name);
+				exponents.add(key);
+			}*/
 		} return exponents;
 	} public Expression value() throws Exception{
 		Token curr_token = this.getToken(0);

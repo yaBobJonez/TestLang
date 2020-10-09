@@ -24,6 +24,7 @@ public abstract class AbstractVisitor implements Visitor {
 	public void visit(BreakStatement s) {}
 	@Override
 	public void visit(ContainerAccessNode s) throws Exception {
+		s.expr.accept(this);
 		for(Expression index : s.path){ index.accept(this); }
 	}
 	@Override

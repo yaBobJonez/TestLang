@@ -1,15 +1,23 @@
 package AST;
 
 import lib.*;
+import test.Token;
+
 import java.util.*;
 
 import exceptions.TypeConsumingException;
 
 public class ContainerAccessNode implements Expression, Accessible {
-	public String var;
+	public Expression expr;
+	public boolean exprIsVar;
 	public List<Expression> path;
-	public ContainerAccessNode(String var, List<Expression> path) {
-		this.var = var;
+	public ContainerAccessNode(Expression expr, List<Expression> path) {
+		this.expr = expr;
+		this.exprIsVar = expr instanceof VariableNode;
+		this.path = path;
+	}
+	public ContainerAccessNode(Token var, List<Expression> path) {
+		this.expr = new VariableNode(var);
 		this.path = path;
 	}
 	@Override
@@ -30,7 +38,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	}
 	public Value getContainer() throws Exception{
-		Value container = Variables.get(this.var);
+		Value container = this.expr.eval();
 		int last = this.path.size() - 1;
 		for(int i = 0; i < last; i++){
 			Value index = this.index(i);
@@ -42,7 +50,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 			} else throw new TypeConsumingException("array");
 		} return container;
 	}
-	public ArrayValue checkForArray(Value array) throws Exception{
+	/*public ArrayValue checkForArray(Value array) throws Exception{          //May be not needed anymore
 		if(array instanceof ArrayValue){
 			return (ArrayValue)array;
 		} else throw new TypeConsumingException("array");
@@ -50,14 +58,14 @@ public class ContainerAccessNode implements Expression, Accessible {
 		if(map instanceof MapValue){
 			return (MapValue)map;
 		} else throw new TypeConsumingException("associative array");
-	}
+	}*/
 	public Value index(int index) throws Exception{
 		return this.path.get(index).eval();
 	} public Value lastIndex() throws Exception{
 		return this.index(this.path.size() - 1);
 	}
 	public String toString(){
-		return "ArrayAccess{name = " + this.var + "; path = " + this.path + "}";
+		return "ArrayAccess{name = " + this.expr.toString() + "; path = " + this.path + "}";
 	}
 	@Override
 	public void accept(Visitor visitor) throws Exception {

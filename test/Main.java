@@ -9,27 +9,27 @@ public class Main
 {
 	public static void main (String[] args) throws Exception
 	{
+		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("a = 1; b = 'hi'; function test(b){ a = 2; print a; print b; } print a; print b; test('well'); print a; print b;", false, false); return; }
-		boolean tokens = false; boolean ast = false;
+		if(args.length == 0){ run("function f1(){ return function(a,b){ return a+b; } } print f1()(2, 3);", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){
 				case "-t":
-				case "-tokens": tokens = true; break;
+				case "-tokens": options.tokens = true; break;
 				case "-a":
-				case "-ast": ast = true; break;
+				case "-ast": options.ast = true; break;
 				default: throw new RuntimeException("Unknown argument.");
 			}
-		} run(input, tokens, ast);
+		} run(input, options);
 	}
-	public static void run(String input, boolean tokens, boolean ast) throws Exception{
+	public static void run(String input, Options options) throws Exception{
 		Lexer lexer = new Lexer(input);
 		List<Token> lexres = lexer.tokenize();
-		if(tokens) System.out.println(lexres);
+		if(options.tokens) System.out.println(lexres);
 		Parser parser = new Parser(lexres);
 		Statement parseres = parser.parse();
-		if(ast) System.out.println(parseres);
+		if(options.ast) System.out.println(parseres);
 		if(parser.parseErrors.hasErrors()){
 			System.out.println(parser.parseErrors);
 			System.exit(1);
@@ -46,5 +46,12 @@ public class Main
 		for(CallStack.Call call : CallStack.calls){
 			System.err.print("at " + call.output() + "\n");
 		} //throwable.printStackTrace(); //For testing purposes.
+	}
+	public static class Options{
+		public boolean tokens, ast;
+		public Options(){
+			this.tokens = false;
+			this.ast = false;
+		}
 	}
 }

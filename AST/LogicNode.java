@@ -17,7 +17,7 @@ public class LogicNode implements Expression {
 		Value left = this.left.eval();
 		Value right = this.right.eval();
 		double str1, str2;
-		if((left instanceof StringValue) && (right instanceof StringValue)){
+		if((left instanceof StringValue) && (right instanceof StringValue)){ //TODO comparison of non-string or non-numeric objects
 			str1 = right.asString().compareTo(left.asString());
 			str2 = 0;
 		} else {

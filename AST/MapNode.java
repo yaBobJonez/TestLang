@@ -16,8 +16,8 @@ public class MapNode implements Expression {
 	@Override
 	public Value eval() throws Exception {
 		MapValue array = new MapValue();
-		for(Expression key : this.elements.keySet()){
-			array.set(key.eval(), this.elements.get(key).eval());
+		for(Map.Entry<Expression, Expression> entry : this.elements.entrySet()){
+			array.set(entry.getKey().eval(), entry.getValue().eval());
 		} return array;
 	}
 	@Override

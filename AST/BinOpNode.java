@@ -3,7 +3,7 @@ package AST;
 import exceptions.IllegalOperationException;
 import lib.*;
 
-public class BinOpNode implements Expression {
+public class BinOpNode implements Expression { //TODO refactor
 	public Expression left;
 	public String operator;
 	public Expression right;
