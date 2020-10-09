@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("function f1(){ return function(a,b){ return a+b; } } print f1()(2, 3);", options); return; }
+		if(args.length == 0){ run("print 'Now you can specify more than one module to load!';", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

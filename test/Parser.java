@@ -154,12 +154,12 @@ public class Parser {
 		if(this.getToken(0).type == TokenList.TO_LPAR){
 			return this.functionChain(expr);
 		}
-		else if(this.getToken(0).type == TokenList.TS_ACCESS){
+		/*else if(this.getToken(0).type == TokenList.TS_ACCESS){
 			List<Expression> exponents = this.arrayExponents();
 			if(exponents != null | exponents.isEmpty()) return expr;
 			if(this.getToken(0).type == TokenList.TO_LPAR) return this.functionChain(new ContainerAccessNode(expr, exponents));
 			else return new ContainerAccessNode(expr, exponents);
-		} return expr;
+		}*/ return expr;
 	} public FuncDefStatement defineFunction() throws Exception{
 		String name = this.consume(TokenList.TS_ID).value;
 		Arguments args = this.arguments();
