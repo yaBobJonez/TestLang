@@ -52,7 +52,9 @@ public class Parser {
 		if(matches(TokenList.TS_SEMICOLON)){ return new SemicolonStatement(); }
 		else if(matches(TokenList.TI_OUT)){
 			return new OutputStatement(this.expression());
-		} else if(matches(TokenList.TS_IF)){
+		} else if(matches(TokenList.TI_IN)){
+			return this.input();
+		}else if(matches(TokenList.TS_IF)){
 			return this.ifElseState();
 		} else if(matches(TokenList.TS_FOR)){
 			return this.forState();
@@ -179,6 +181,11 @@ public class Parser {
 		while(!this.matches(TokenList.TO_RCURL)){
 			block.add(this.statement());
 		} return block;
+	} public InputStatement input() throws Exception{
+		String name = this.consume(TokenList.TS_ID).value;
+		Expression expr = null;
+		if(matches(TokenList.TA_IN)) expr = this.expression();
+		return new InputStatement(name, expr);
 	}
 	public Expression array() throws Exception{
 		consume(TokenList.TO_LBRA);

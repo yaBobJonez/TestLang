@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("foreach(char in 'String iteration') print char;", options); return; }
+		if(args.length == 0){ run("input x in 'You can take input now:'; print x;", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

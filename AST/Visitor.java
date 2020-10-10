@@ -18,6 +18,7 @@ public interface Visitor {
 	void visit(FunctionStatement s) throws Exception;
 	void visit(IfElseStatement s) throws Exception;
 	void visit(IncludeStatement s) throws Exception;
+	void visit(InputStatement s) throws Exception;
 	void visit(LogicNode s) throws Exception;
 	void visit(MapNode s) throws Exception;
 	void visit(NodeStatement s) throws Exception;
