@@ -2,6 +2,8 @@ package lib;
 
 import java.util.Objects;
 
+import exceptions.PropertyDoesNotExistException;
+
 public class StringValue implements Value {
 	public String value;
 	public StringValue(String value) {
@@ -11,7 +13,12 @@ public class StringValue implements Value {
 	public String asString() {
 		return this.value;
 	}
-
+	public Value access(Value name) throws PropertyDoesNotExistException{
+		switch(name.asString()){
+			case "length": return new NumberValue(this.value.length());
+			default: throw new PropertyDoesNotExistException(name.asString());
+		}
+	}
 	@Override
 	public int asInteger() {
 		try { return Integer.parseInt(this.value); }

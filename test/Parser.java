@@ -154,12 +154,12 @@ public class Parser {
 		if(this.getToken(0).type == TokenList.TO_LPAR){
 			return this.functionChain(expr);
 		}
-		/*else if(this.getToken(0).type == TokenList.TS_ACCESS){
-			List<Expression> exponents = this.arrayExponents();
+		else if(this.getToken(0).type == TokenList.TS_ACCESS){
+			List<Expression> exponents = this.variableExponents();
 			if(exponents != null | exponents.isEmpty()) return expr;
 			if(this.getToken(0).type == TokenList.TO_LPAR) return this.functionChain(new ContainerAccessNode(expr, exponents));
 			else return new ContainerAccessNode(expr, exponents);
-		}*/ return expr;
+		} return expr;
 	} public FuncDefStatement defineFunction() throws Exception{
 		String name = this.consume(TokenList.TS_ID).value;
 		Arguments args = this.arguments();
@@ -341,24 +341,20 @@ public class Parser {
 	} public Expression qualifiedName() throws Exception{
 		Token curr_token = this.getToken(0);
 		if(matches(TokenList.TS_ID)){
-			List<Expression> exponents = this.arrayExponents();
+			List<Expression> exponents = this.variableExponents();
 			if((exponents == null) || exponents.isEmpty()) return new VariableNode(curr_token);
 			return new ContainerAccessNode(curr_token, exponents);
 		} else if(matches(TokenList.TT_CONST)){
-			List<Expression> exponents = this.arrayExponents();
+			List<Expression> exponents = this.variableExponents();
 			if((exponents == null) || exponents.isEmpty()) return new ConstantNode(curr_token);
 			return new ContainerAccessNode(curr_token, exponents);
 		} else return null;
-	} public List<Expression> arrayExponents() throws Exception{
-		if(!(this.getToken(0).type == TokenList.TO_LBRA) /*|| !(this.getToken(0).type == TokenList.TS_ACCESS)*/) return null;
+	} public List<Expression> variableExponents() throws Exception{
+		if(!(this.getToken(0).type == TokenList.TO_LBRA) && !(this.getToken(0).type == TokenList.TS_ACCESS)) return Collections.emptyList();
 		List<Expression> exponents = new ArrayList<>();
-		while(this.getToken(0).type == TokenList.TO_LBRA /*|| this.getToken(0).type == TokenList.TS_ACCESS*/){
+		while(this.getToken(0).type == TokenList.TO_LBRA || this.getToken(0).type == TokenList.TS_ACCESS){
 			if(matches(TokenList.TO_LBRA)){ exponents.add(this.expression()); this.consume(TokenList.TO_RBRA); }
-			/*else if(matches(TokenList.TS_ACCESS)){
-				String name = this.consume(TokenList.TS_ID).value;
-				Expression key = new ValueNode(name);
-				exponents.add(key);
-			}*/
+			else if(matches(TokenList.TS_ACCESS)){ Expression key = new ValueNode(this.consume(TokenList.TS_ID).value); exponents.add(key); }
 		} return exponents;
 	} public Expression value() throws Exception{
 		Token curr_token = this.getToken(0);
@@ -374,7 +370,16 @@ public class Parser {
 		} else if(matches(TokenList.TT_DOUBLE)){
 			return new ValueNode(Double.parseDouble(curr_token.value)); //TODO float
 		} else if(matches(TokenList.TT_STRING)){
-			return new ValueNode(curr_token.value);
+			ValueNode expr = new ValueNode(curr_token.value);
+			if(this.getToken(0).type == TokenList.TS_ACCESS){
+				if(this.getToken(1).type == TokenList.TS_ID & this.getToken(2).type == TokenList.TO_LPAR){
+					this.consume(TokenList.TS_ACCESS);
+					ValueNode propName = new ValueNode(this.consume(TokenList.TS_ID).value);
+					ContainerAccessNode prop = new ContainerAccessNode(expr, Collections.singletonList(propName));
+					return this.functionChain(prop);
+				} List<Expression> exponents = this.variableExponents();
+				if(!exponents.isEmpty() | exponents != null) return new ContainerAccessNode(expr, exponents);
+			} return expr;
 		} else if(matches(TokenList.TT_BOOL)){
 			return new ValueNode(Boolean.parseBoolean(curr_token.value));
 		} else if(matches(TokenList.TT_NULL)){
