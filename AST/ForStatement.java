@@ -16,7 +16,7 @@ public class ForStatement implements Statement {
 		for(this.initial.execute(); this.condition.eval().asBoolean(); this.increment.execute()){
 			try { this.statement.execute(); }
 			catch (BreakStatement e) { break; }
-			catch (ContinueStatement e) { /*TODO continue*/ }
+			catch (ContinueStatement e) {}
 		}
 	}
 	@Override

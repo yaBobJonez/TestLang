@@ -77,7 +77,7 @@ public abstract class AbstractVisitor implements Visitor {
 	}
 	@Override
 	public void visit(InputStatement s) throws Exception{
-		s.msg.accept(this);
+		//TODO fast "msg" check
 	}
 	@Override
 	public void visit(LogicNode s) throws Exception {

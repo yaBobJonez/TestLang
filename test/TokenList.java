@@ -6,7 +6,7 @@ public final class TokenList {
 	public static final String TT_STRING = "STRING";
 	public static final String TT_BOOL = "BOOLEAN";
 	public static final String TT_CONST = "CONSTANT";
-	public static final String TT_NULL = "NULL"; //TODO null, inf, nan
+	public static final String TT_NULL = "NULL";
 	public static final String TT_INF = "INFINITY";
 	public static final String TT_NAN = "NAN";
 	

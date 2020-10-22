@@ -98,6 +98,7 @@ public class Parser {
 	} public Statement ifElseState() throws Exception{
 		Expression condition = this.expression();
 		Statement ifState = this.StateOrBlock();
+		matches(TokenList.TS_SEMICOLON);
 		Statement elseState;
 		if(matches(TokenList.TS_ELSE)){
 			elseState = this.StateOrBlock();
@@ -375,7 +376,7 @@ public class Parser {
 				}
 			} return new ValueNode(num);
 		} else if(matches(TokenList.TT_DOUBLE)){
-			return new ValueNode(Double.parseDouble(curr_token.value)); //TODO float
+			return new ValueNode(Double.parseDouble(curr_token.value));
 		} else if(matches(TokenList.TT_STRING)){
 			ValueNode expr = new ValueNode(curr_token.value);
 			if(this.getToken(0).type == TokenList.TS_ACCESS){

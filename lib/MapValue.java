@@ -5,11 +5,11 @@ import java.util.*;
 public class MapValue implements Value, Iterable<Map.Entry<Value, Value>> {
 	public Map<Value, Value> array;
 	public MapValue(Map<Value, Value> array) {
-		this.array = new HashMap<>();
+		this.array = new LinkedHashMap<>();
 		this.array = array;
 	}
 	public MapValue() {
-		this.array = new HashMap<>();
+		this.array = new LinkedHashMap<>();
 	}
 	public Value get(Value key){
 		return this.array.get(key);

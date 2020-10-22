@@ -32,7 +32,7 @@ public class Variables {
 		}
 	} public static void pop(){
 		synchronized(lock){
-			if(currentScope.superScope != null) currentScope = currentScope.superScope; //TODO check everything, fix scoping!
+			if(currentScope.superScope != null) currentScope = currentScope.superScope; //TODO check everything
 		}
 	}
 	public static Value get(String key) throws Exception{

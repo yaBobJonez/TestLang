@@ -12,7 +12,7 @@ public class WhileStatement implements Statement {
 		while(this.condition.eval().asBoolean()){
 			try { this.statement.execute(); }
 			catch (BreakStatement e) { break; }
-			catch (ContinueStatement e) { /*TODO continue*/ }
+			catch (ContinueStatement e) {}
 		}
 	}
 	@Override

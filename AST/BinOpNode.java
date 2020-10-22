@@ -66,6 +66,7 @@ public class BinOpNode implements Expression { //TODO refactor
 					return new NumberValue(number1 / number2);
 				case "%": return new NumberValue(number1 % number2);
 				case "^": return new NumberValue(Math.pow(number1, number2));
+				case ".": return new StringValue(left.asString() + right.asString());
 				default: throw new IllegalOperationException(this.operator);
 			}
 		}

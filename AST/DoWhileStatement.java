@@ -12,7 +12,7 @@ public class DoWhileStatement implements Statement {
 		do{
 			try { this.statement.execute(); }
 			catch (BreakStatement e) { break; }
-			catch (ContinueStatement e) { /*TODO continue*/ }
+			catch (ContinueStatement e) {}
 		} while (this.condition.eval().asBoolean());
 	}
 	@Override
