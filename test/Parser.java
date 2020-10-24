@@ -73,8 +73,9 @@ public class Parser {
 		else if(matches(TokenList.TS_INCLUDE)){ return new IncludeStatement(this.expression()); }
 		else if(matches(TokenList.TS_FUNCTION)){
 			return this.defineFunction();
-		}
-		else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
+		} else if(matches(TokenList.TS_CLASS)){
+			return this.declareClass();
+		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return new NodeStatement(this.functionChain(this.qualifiedName()));
 		}
 		return this.assignmentState();
@@ -82,8 +83,8 @@ public class Parser {
 	public Statement assignmentState() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LBRA){
 			return this.destructuringAssignment();
-		} Expression assignment = this.assign();
-		if(assignment != null) return new NodeStatement(assignment);
+		} Expression assignment = this.expression();
+		if(assignment instanceof Statement) return (Statement)assignment;
 		else { throw new UnsupportedStatementException(this.getToken(0).value, this.getToken(0).line, this.getToken(0).character); }
 	} public DestructuringAssignmentStatement destructuringAssignment() throws Exception{
 		this.consume(TokenList.TO_LBRA);
@@ -172,6 +173,21 @@ public class Parser {
 		Arguments args = this.arguments();
 		Statement body = this.StateOrBlock();
 		return new ValueNode(new UserFunction(args, body));
+	} public Statement declareClass() throws Exception{
+		String className = this.consume(TokenList.TS_ID).value;
+		ClassStatement classSt = new ClassStatement(className);
+		this.consume(TokenList.TO_LCURL); //TODO extends/implements before this
+		while(!matches(TokenList.TO_RCURL)){
+			if(matches(TokenList.TS_FUNCTION)) classSt.addMethod(this.defineFunction());
+			else if(this.getToken(0).type == TokenList.TS_ID){
+				VariableNode target = new VariableNode(this.consume(TokenList.TS_ID));
+				Expression expr = new ValueNode((Object)"null");
+				if(matches(TokenList.TS_ASSIGN)) expr = this.expression();
+				AssignmentNode field = new AssignmentNode((Accessible)target, null, expr);
+				classSt.addField(field);
+			} else throw new UnsupportedStatementException("invalid class declaration");
+			this.matches(TokenList.TS_SEMICOLON);
+		} return classSt;
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }
@@ -232,7 +248,7 @@ public class Parser {
 		Expression assignment = this.assign();
 		if(assignment != null) return assignment;
 		return this.ternary();
-	} public Expression assign() throws Exception{
+	} public AssignmentNode assign() throws Exception{
 		int pos = this.position;
 		Expression target = this.qualifiedName(); //Alters position by one
 		if((target == null) || !(target instanceof Accessible)){ this.position = pos; return null; }
@@ -305,18 +321,28 @@ public class Parser {
 			} break;
 		} return result;
 	} public Expression multiplication() throws Exception{
-		Expression result = this.unary();
+		Expression result = this.object();
 		while(true){
 			if(this.matches(TokenList.TO_MULTIPLY)){
-				result = new BinOpNode(result, "*", this.unary()); continue;
+				result = new BinOpNode(result, "*", this.object()); continue;
 			} else if(this.matches(TokenList.TO_DIVIDE)){
-				result = new BinOpNode(result, "/", this.unary()); continue;
+				result = new BinOpNode(result, "/", this.object()); continue;
 			} else if(this.matches(TokenList.TO_MODULO)){
-				result = new BinOpNode(result, "%", this.unary()); continue;
+				result = new BinOpNode(result, "%", this.object()); continue;
 			} else if(this.matches(TokenList.TO_POWER)){
-				result = new BinOpNode(result, "^", this.unary()); continue;
+				result = new BinOpNode(result, "^", this.object()); continue;
 			} break;
 		} return result;
+	} public Expression object() throws Exception{
+		if(this.matches(TokenList.TA_NEW)){
+			String className = this.consume(TokenList.TS_ID).value;
+			this.consume(TokenList.TO_LPAR); //TODO no parentheses — default constructor
+			List<Expression> args = new ArrayList<>();
+			while(!this.matches(TokenList.TO_RPAR)){
+				args.add(this.expression());
+				this.matches(TokenList.TO_COMMA);
+			} return new ObjectNode(className, args);
+		} return this.unary();
 	} public Expression unary() throws Exception{
 		if(this.matches(TokenList.TO_MINUS)){
 			return new UnOpNode('-', this.factor());

@@ -5,7 +5,7 @@ import exceptions.FunctionDoesNotExistException;
 import exceptions.VariableDoesNotExistException;
 import lib.*;
 
-public class FunctionNode implements Expression {
+public class FunctionNode implements Expression, Statement {
 	public Expression name;
 	public List<Expression> args;
 	public FunctionNode(Expression name, List<Expression> args) { //May be not used.
@@ -26,6 +26,9 @@ public class FunctionNode implements Expression {
 		Value res = func.execute(argsValues);
 		CallStack.exit();
 		return res;
+	} @Override
+	public void execute() throws Exception {
+		this.eval();
 	}
 	public void addArg(Expression argument){
 		this.args.add(argument);

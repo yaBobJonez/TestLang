@@ -28,6 +28,7 @@ public class InfinityValue implements Value {
 	public Object asRaw() {
 		return this.asDouble();
 	}
+	//TODO hash, equals
 	@Override
 	public String toString() {
 		return this.asString();

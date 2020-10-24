@@ -6,6 +6,7 @@ public interface Visitor {
 	void visit(BinOpNode s) throws Exception;
 	void visit(BlockStatement s) throws Exception;
 	void visit(BreakStatement s) throws Exception;
+	void visit(ClassStatement s) throws Exception;
 	void visit(ConstantNode s);
 	void visit(ContainerAccessNode s) throws Exception;
 	void visit(ContinueStatement s) throws Exception;
@@ -15,13 +16,13 @@ public interface Visitor {
 	void visit(ForeachStatement s) throws Exception;
 	void visit(FuncDefStatement s) throws Exception;
 	void visit(FunctionNode s) throws Exception;
-	void visit(FunctionStatement s) throws Exception;
 	void visit(IfElseStatement s) throws Exception;
 	void visit(IncludeStatement s) throws Exception;
 	void visit(InputStatement s) throws Exception;
 	void visit(LogicNode s) throws Exception;
 	void visit(MapNode s) throws Exception;
 	void visit(NodeStatement s) throws Exception;
+	void visit(ObjectNode s) throws Exception;
 	void visit(OutputStatement s) throws Exception;
 	void visit(ReturnStatement s) throws Exception;
 	void visit(SemicolonStatement s);

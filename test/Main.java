@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("if(true) print 'Fixes '.'and'.' changes!'; print 'TODO: unless, until, classes :D';", options); return; }
+		if(args.length == 0){ run("class Test { a = 0; function b(){ print 'TODO: unless, until'; } function constructor(){ print 'Wow! Classes!'; } } great = new Test(); print great->a; great->b();", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

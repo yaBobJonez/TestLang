@@ -3,7 +3,7 @@ package AST;
 import exceptions.IllegalOperationException;
 import lib.*;
 
-public class UnOpNode implements Expression { //TODO refactor
+public class UnOpNode implements Expression, Statement { //TODO refactor
 	public char operator;
 	public Expression right;
 	public UnOpNode(char operator, Expression right) {
@@ -21,7 +21,11 @@ public class UnOpNode implements Expression { //TODO refactor
 			case '!': return new BooleanValue(this.right.eval().asBoolean() != false ? false : true);
 			default: throw new IllegalOperationException(String.valueOf(this.operator));
 		}
-	} public String toString(){
+	} @Override
+	public void execute() throws Exception {
+		this.eval();
+	}
+	public String toString(){
 		return "(" + String.valueOf(this.operator) + ", " + String.valueOf(this.right) + ")";
 	}
 	@Override

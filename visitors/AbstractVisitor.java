@@ -23,6 +23,11 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(BreakStatement s) {}
 	@Override
+	public void visit(ClassStatement s) throws Exception {
+		for(AssignmentNode a : s.fields) a.accept(this); //TODO check class declarations visitor
+		for(FuncDefStatement f : s.methods) f.body.accept(this);
+	}
+	@Override
 	public void visit(ContainerAccessNode s) throws Exception {
 		s.expr.accept(this);
 		for(Expression index : s.path){ index.accept(this); }
@@ -62,10 +67,6 @@ public abstract class AbstractVisitor implements Visitor {
 		for(Expression arg : s.args){ arg.accept(this); }
 	}
 	@Override
-	public void visit(FunctionStatement s) throws Exception {
-		s.function.accept(this);
-	}
-	@Override
 	public void visit(IfElseStatement s) throws Exception {
 		s.condition.accept(this);
 		s.ifStatement.accept(this);
@@ -94,6 +95,10 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(NodeStatement s) throws Exception{
 		s.expr.accept(this);
+	}
+	@Override
+	public void visit(ObjectNode s) throws Exception{
+		for(Expression arg : s.consArgs) arg.accept(this);
 	}
 	@Override
 	public void visit(OutputStatement s) throws Exception {

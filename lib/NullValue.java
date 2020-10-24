@@ -21,6 +21,7 @@ public class NullValue implements Value {
 	public Object asRaw() {
 		return null;
 	}
+	//TODO hash, equals
 	@Override
 	public String toString() {
 		return "null";
