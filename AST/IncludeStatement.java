@@ -24,7 +24,7 @@ public class IncludeStatement implements Statement {
 			if(!parser.parseErrors.hasErrors()){
 				ast.accept(new FunctionsPresetter());
 				ast.execute();
-			}
+			} else throw new Exception(parser.parseErrors.toString());
 		} catch(Exception e){
 			throw new Exception(e);
 		}

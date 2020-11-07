@@ -28,6 +28,7 @@ public class Lexer {
 			else if("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(this.curr_char) != -1){ tokens.add(this.buildWord()); }
 			else if("=+-*/>?:^%,.!<&|".indexOf(this.curr_char) != -1) { tokens.add(this.buildOperator()); }
 			else if(this.curr_char == '@') { tokens.add(this.buildConstant()); }
+			else if(this.curr_char == '`') { tokens.add(this.buildExtended()); }
 			else if(this.curr_char == '(') { tokens.add(new Token(TokenList.TO_LPAR, null)); this.advance(); }
 			else if(this.curr_char == ')') { tokens.add(new Token(TokenList.TO_RPAR, null)); this.advance(); }
 			else if(this.curr_char == '[') { tokens.add(new Token(TokenList.TO_LBRA, null)); this.advance(); }
@@ -110,6 +111,13 @@ public class Lexer {
 			} else {
 				string += this.curr_char; this.advance();
 			}
+		} return null;
+	} public Token buildExtended(){
+		this.advance();
+		String string = "";
+		while(this.curr_char != (char)0){
+			if(this.curr_char == '`'){ this.advance(); return new Token(TokenList.TS_ID, string); }
+			else { string += this.curr_char; this.advance(); }
 		} return null;
 	} public Token buildOperator() throws LexerException{
 		String operator = "";

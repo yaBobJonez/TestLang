@@ -37,6 +37,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 		Value lastIndex = this.lastIndex();
 		if(container instanceof ArrayValue){ ((ArrayValue)container).set(lastIndex.asInteger(), value); return value; }
 		else if(container instanceof MapValue){ ((MapValue)container).set(lastIndex, value); return value; }
+		else if(container instanceof InstanceValue){ ((InstanceValue)container).set(lastIndex, value); return value; }
 		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	}
 	public Value getContainer() throws Exception{

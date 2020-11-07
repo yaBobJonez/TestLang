@@ -17,6 +17,8 @@ public class InstanceValue implements Value {
 		if(key.equals("constructor")) this.constructor = value;
 	} public Value get(Value name){
 		return this.container.get(name);
+	} public void set(Value key, Value value){
+		this.container.set(key, value);
 	}
 	public void callConstructor(Value[] args) throws Exception{
 		if(this.constructor != null) this.constructor.execute(args);
