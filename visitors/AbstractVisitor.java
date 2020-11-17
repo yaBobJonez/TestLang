@@ -121,6 +121,13 @@ public abstract class AbstractVisitor implements Visitor {
 		s.falseActions.accept(this);
 	}
 	@Override
+	public void visit(TryCatchStatement s) throws Exception {
+		s.body.accept(this);
+		for(Statement entry : s.catches.values()){
+			entry.accept(this);
+		}
+	}
+	@Override
 	public void visit(UnOpNode s) throws Exception {
 		s.right.accept(this);
 	}

@@ -66,6 +66,8 @@ public class Parser {
 			return this.doWhileState();
 		} else if(matches(TokenList.TS_SWITCH)){
 			return this.switchState();
+		} else if(matches(TokenList.TS_TRY)){
+			return this.tryCatch();
 		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
 		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
@@ -146,6 +148,18 @@ public class Parser {
 			cases.add(this.casePattern());
 			this.matches(TokenList.TS_SEMICOLON);
 		} return new SwitchStatement(expr, cases);
+	} public Statement tryCatch() throws Exception{
+		Statement body = this.blockState();
+		Map<String, Statement> catches = new HashMap<>();
+		do {
+			this.consume(TokenList.TS_CATCH);
+			this.consume(TokenList.TO_LPAR);
+			String type = this.consume(TokenList.TS_ID).value; //TODO caught throwable variable ($e)
+			this.consume(TokenList.TO_RPAR);
+			Statement exceptionBody = this.blockState();
+			catches.put(type, exceptionBody);
+		} while(this.getToken(0).type == TokenList.TS_CATCH);
+		return new TryCatchStatement(body, catches);
 	} public FunctionNode function(Expression varName) throws Exception{
 		this.consume(TokenList.TO_LPAR);
 		FunctionNode func = new FunctionNode(varName);

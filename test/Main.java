@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("`e x t` = 2; print `e x t`;", options); return; }
+		if(args.length == 0){ run("try { print 0; print error; } catch(VariableDoesNotExistException){ print 'It works!'; }", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){
