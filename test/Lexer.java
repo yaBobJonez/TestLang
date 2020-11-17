@@ -84,6 +84,7 @@ public class Lexer {
 			case "input": return new Token(TokenList.TI_IN, null);
 			case "try": return new Token(TokenList.TS_TRY, null);
 			case "catch": return new Token(TokenList.TS_CATCH, null);
+			case "raise": return new Token(TokenList.TS_RAISE, null);
 			default: return new Token(TokenList.TS_ID, word, this.line, this.character);
 		}
 	} public Token buildString(char starter){

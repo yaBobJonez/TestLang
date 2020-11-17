@@ -33,6 +33,7 @@ public final class TokenList {
 	public static final String TS_CLASS = "CLASS";
 	public static final String TS_TRY = "TRY";
 	public static final String TS_CATCH = "CATCH";
+	public static final String TS_RAISE = "RAISE";
 	
 	public static final String TA_BREAK = "BREAK";
 	public static final String TA_CONTINUE = "CONTINUE";

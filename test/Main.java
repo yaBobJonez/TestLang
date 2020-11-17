@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("try { print 0; print error; } catch(VariableDoesNotExistException){ print 'It works!'; }", options); return; }
+		if(args.length == 0){ run("print 'It should raise an exception now!'; raise Exception('My cool exceptioN');", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

@@ -105,6 +105,8 @@ public abstract class AbstractVisitor implements Visitor {
 		s.expression.accept(this);
 	}
 	@Override
+	public void visit(RaiseStatement s) throws Exception {}
+	@Override
 	public void visit(ReturnStatement s) throws Exception {
 		s.expression.accept(this);
 	}

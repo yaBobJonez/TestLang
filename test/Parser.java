@@ -68,6 +68,8 @@ public class Parser {
 			return this.switchState();
 		} else if(matches(TokenList.TS_TRY)){
 			return this.tryCatch();
+		} else if(matches(TokenList.TS_RAISE)){
+			return this.raiseState();
 		} else if(matches(TokenList.TA_BREAK)){ return new BreakStatement(); }
 		else if(matches(TokenList.TA_CONTINUE)){ return new ContinueStatement(); }
 		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
@@ -160,7 +162,15 @@ public class Parser {
 			catches.put(type, exceptionBody);
 		} while(this.getToken(0).type == TokenList.TS_CATCH);
 		return new TryCatchStatement(body, catches);
-	} public FunctionNode function(Expression varName) throws Exception{
+	} public Statement raiseState() throws Exception{
+		String type = this.consume(TokenList.TS_ID).value;
+		String message = "";
+		if(matches(TokenList.TO_LPAR)){
+			message = this.consume(TokenList.TT_STRING).value;
+			this.consume(TokenList.TO_RPAR);
+		} return new RaiseStatement(type, message);
+	}
+	public FunctionNode function(Expression varName) throws Exception{
 		this.consume(TokenList.TO_LPAR);
 		FunctionNode func = new FunctionNode(varName);
 		while(!this.matches(TokenList.TO_RPAR)){
