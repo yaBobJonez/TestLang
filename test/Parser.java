@@ -146,10 +146,15 @@ public class Parser {
 		this.consume(TokenList.TO_RPAR);
 		this.consume(TokenList.TO_LCURL);
 		List<CaseValue> cases = new ArrayList<>();
+		Statement def = null;
 		while(!this.matches(TokenList.TO_RCURL)){
-			cases.add(this.casePattern());
+			if(this.getToken(0).type == TokenList.TA_DEFAULT){
+				def = this.defaultPattern();
+				this.matches(TokenList.TS_SEMICOLON);
+				this.consume(TokenList.TO_RCURL); break;
+			} cases.add(this.casePattern());
 			this.matches(TokenList.TS_SEMICOLON);
-		} return new SwitchStatement(expr, cases);
+		} return new SwitchStatement(expr, cases, def);
 	} public Statement tryCatch() throws Exception{
 		Statement body = this.blockState();
 		Map<String, Statement> catches = new HashMap<>();
@@ -246,12 +251,20 @@ public class Parser {
 			matches(TokenList.TO_COMMA);
 		} return new MapNode(elements);
 	} public CaseValue casePattern() throws Exception{
-		this.consume(TokenList.TA_CASE);
-		Expression match = this.expression();
-		this.consume(TokenList.TS_COLON);
+		List<Expression> matches = new ArrayList<>();
+		do {
+			this.consume(TokenList.TA_CASE);
+			matches.add(this.expression());
+			this.consume(TokenList.TS_COLON);
+		} while(this.getToken(0).type == TokenList.TA_CASE);
 		Statement body = this.StateOrBlock();
-		return new CaseValue(match, body);
-	} public Arguments arguments() throws Exception{
+		return new CaseValue(matches, body);
+	} public Statement defaultPattern() throws Exception{
+		this.consume(TokenList.TA_DEFAULT);
+		this.consume(TokenList.TS_COLON);
+		return this.StateOrBlock();
+	}
+	public Arguments arguments() throws Exception{
 		Arguments args = new Arguments();
 		boolean startsOpt = false;
 		this.consume(TokenList.TO_LPAR);

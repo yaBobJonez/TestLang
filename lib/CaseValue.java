@@ -1,17 +1,19 @@
 package lib;
 
+import java.util.List;
+
 import AST.*;
 
 public class CaseValue implements Value {
-	public Expression match;
+	public List<Expression> match;
 	public Statement body;
-	public CaseValue(Expression match, Statement body) {
+	public CaseValue(List<Expression> match, Statement body) {
 		this.match = match;
 		this.body = body;
 	}
 	@Override
 	public String asString() {
-		return "Case{value = " + this.match + "; body = " + this.body + "}";
+		return "Case{value = " + this.match.toString() + "; body = " + this.body + "}";
 	}
 	@Override
 	public int asInteger() {
