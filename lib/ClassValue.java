@@ -9,12 +9,11 @@ import AST.FuncDefStatement;
 
 public class ClassValue implements Value {
 	public String className;
-	public MapValue staticContainer;
+	public MapValue staticContainer = new MapValue();
 	public List<AssignmentNode> fields = new ArrayList<>();
 	public List<FuncDefStatement> methods = new ArrayList<>();
 	public ClassValue(String className) {
 		this.className = className;
-		this.staticContainer = new MapValue();
 	}
 	public Value get(Value name){
 		return this.staticContainer.get(name);

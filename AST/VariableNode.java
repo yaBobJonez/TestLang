@@ -15,7 +15,8 @@ public class VariableNode implements Expression, Accessible {
 	}
 	public Value get() throws Exception {
 		if(!Variables.exists(this.token.value)){ 
-			throw new VariableDoesNotExistException(this.token.value);
+			if(!Classes.exists(this.token.value)) throw new VariableDoesNotExistException(this.token.value);
+			return Classes.get(this.token.value);
 		} return Variables.get(this.token.value);
 	} public Value set(Value value) throws Exception {
 		Variables.define(this.token.value, value);

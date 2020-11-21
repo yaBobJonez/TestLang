@@ -1,6 +1,7 @@
 package AST;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import lib.ClassMethod;
 import lib.Classes;
@@ -19,7 +20,9 @@ public class ObjectNode implements Expression {
 	public Value eval() throws Exception {
 		ClassValue classVal = Classes.get(this.className);
 		InstanceValue obj = new InstanceValue(this.className);
-		for(AssignmentNode asgn : classVal.fields){
+		for(Entry<Value, Value> entry : classVal.staticContainer){
+			obj.container.set(entry.getKey(), entry.getValue());
+		} for(AssignmentNode asgn : classVal.fields){
 			String field = ((VariableNode)asgn.target).token.value;
 			obj.addField(field, asgn.eval());
 		} for(FuncDefStatement method : classVal.methods){

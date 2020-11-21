@@ -76,6 +76,7 @@ public class Lexer {
 			case "break": return new Token(TokenList.TA_BREAK, null);
 			case "continue": return new Token(TokenList.TA_CONTINUE, null);
 			case "return": return new Token(TokenList.TA_RETURN, null);
+			case "static": return new Token(TokenList.TA_STATIC, null);
 			case "use": return new Token(TokenList.TA_USE, null);
 			case "case": return new Token(TokenList.TA_CASE, null);
 			case "default": return new Token(TokenList.TA_DEFAULT, null);

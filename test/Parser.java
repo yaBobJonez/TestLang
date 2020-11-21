@@ -214,6 +214,14 @@ public class Parser {
 				if(matches(TokenList.TS_ASSIGN)) expr = this.expression();
 				AssignmentNode field = new AssignmentNode((Accessible)target, null, expr);
 				classSt.addField(field);
+			} else if(matches(TokenList.TA_STATIC)){
+				if(matches(TokenList.TS_FUNCTION)) classSt.addStaticMethod(this.defineFunction());
+				else if(this.getToken(0).type == TokenList.TS_ID){
+					String target = this.consume(TokenList.TS_ID).value;
+					this.consume(TokenList.TS_ASSIGN);
+					Expression expr = this.expression();
+					classSt.addStaticField(target, expr.eval());
+				} else throw new UnsupportedStatementException("invalid class declaration");
 			} else throw new UnsupportedStatementException("invalid class declaration");
 			this.matches(TokenList.TS_SEMICOLON);
 		} return classSt;
