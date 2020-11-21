@@ -23,7 +23,7 @@ public abstract class AbstractVisitor implements Visitor {
 	@Override
 	public void visit(BreakStatement s) {}
 	@Override
-	public void visit(ClassStatement s) throws Exception {
+	public void visit(ClassDefStatement s) throws Exception {
 		for(AssignmentNode a : s.fields) a.accept(this); //TODO check class declarations visitor
 		for(FuncDefStatement f : s.methods) f.body.accept(this);
 	}

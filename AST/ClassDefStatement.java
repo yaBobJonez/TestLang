@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lib.Classes;
+import lib.ClassValue;
 
-public class ClassStatement implements Statement { //TODO separate => Class, ClassDefStatement
+public class ClassDefStatement implements Statement { //TODO separate => Class, ClassDefStatement
 	public String name;
 	public List<AssignmentNode> fields = new ArrayList<>();
 	public List<FuncDefStatement> methods = new ArrayList<>();
-	public ClassStatement(String name) {
+	public ClassDefStatement(String name) {
 		this.name = name;
 	}
 	@Override
 	public void execute() throws Exception {
-		Classes.set(this.name, this);
+		ClassValue classValue = new ClassValue(this.name);
+		classValue.fields = this.fields;
+		classValue.methods = this.methods;
+		Classes.set(this.name, classValue);
 	}
 	public void addField(AssignmentNode field){
 		this.fields.add(field);

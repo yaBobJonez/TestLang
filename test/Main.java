@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("switch('OK'){ case 'no': print 'bad'; case 'Thomas': case 'hi': print 'Great!'; default: print 'E'; }", options); return; }
+		if(args.length == 0){ run("class Test { x = 'Classes'; function func(){ print this->x; } } refactored = new Test(); refactored->func();", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

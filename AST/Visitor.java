@@ -6,7 +6,7 @@ public interface Visitor {
 	void visit(BinOpNode s) throws Exception;
 	void visit(BlockStatement s) throws Exception;
 	void visit(BreakStatement s) throws Exception;
-	void visit(ClassStatement s) throws Exception;
+	void visit(ClassDefStatement s) throws Exception;
 	void visit(ConstantNode s);
 	void visit(ContainerAccessNode s) throws Exception;
 	void visit(ContinueStatement s) throws Exception;

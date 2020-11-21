@@ -6,6 +6,7 @@ import lib.ClassMethod;
 import lib.Classes;
 import lib.InstanceValue;
 import lib.Value;
+import lib.ClassValue;
 
 public class ObjectNode implements Expression {
 	public String className;
@@ -16,12 +17,12 @@ public class ObjectNode implements Expression {
 	}
 	@Override
 	public Value eval() throws Exception {
-		ClassStatement classSt = Classes.get(this.className);
+		ClassValue classVal = Classes.get(this.className);
 		InstanceValue obj = new InstanceValue(this.className);
-		for(AssignmentNode asgn : classSt.fields){
+		for(AssignmentNode asgn : classVal.fields){
 			String field = ((VariableNode)asgn.target).token.value;
 			obj.addField(field, asgn.eval());
-		} for(FuncDefStatement method : classSt.methods){
+		} for(FuncDefStatement method : classVal.methods){
 			obj.addMethod(method.name, new ClassMethod(method.args, method.body, obj));
 		} int size = this.consArgs.size();
 		Value[] args = new Value[size];

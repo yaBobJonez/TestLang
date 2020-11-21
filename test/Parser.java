@@ -204,7 +204,7 @@ public class Parser {
 		return new ValueNode(new UserFunction(args, body));
 	} public Statement declareClass() throws Exception{
 		String className = this.consume(TokenList.TS_ID).value;
-		ClassStatement classSt = new ClassStatement(className);
+		ClassDefStatement classSt = new ClassDefStatement(className);
 		this.consume(TokenList.TO_LCURL); //TODO extends/implements before this
 		while(!matches(TokenList.TO_RCURL)){
 			if(matches(TokenList.TS_FUNCTION)) classSt.addMethod(this.defineFunction());
