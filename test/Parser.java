@@ -207,20 +207,22 @@ public class Parser {
 		ClassDefStatement classSt = new ClassDefStatement(className);
 		this.consume(TokenList.TO_LCURL); //TODO extends/implements before this
 		while(!matches(TokenList.TO_RCURL)){
-			if(matches(TokenList.TS_FUNCTION)) classSt.addMethod(this.defineFunction());
+			byte caller = 0;
+			if(matches(TokenList.TA_PRIVATE)) caller = 1;
+			if(matches(TokenList.TS_FUNCTION)) classSt.addMethod(this.defineFunction(), caller);
 			else if(this.getToken(0).type == TokenList.TS_ID){
 				VariableNode target = new VariableNode(this.consume(TokenList.TS_ID));
 				Expression expr = new ValueNode((Object)"null");
 				if(matches(TokenList.TS_ASSIGN)) expr = this.expression();
 				AssignmentNode field = new AssignmentNode((Accessible)target, null, expr);
-				classSt.addField(field);
+				classSt.addField(field, caller);
 			} else if(matches(TokenList.TA_STATIC)){
-				if(matches(TokenList.TS_FUNCTION)) classSt.addStaticMethod(this.defineFunction());
+				if(matches(TokenList.TS_FUNCTION)) classSt.addStaticMethod(this.defineFunction(), caller);
 				else if(this.getToken(0).type == TokenList.TS_ID){
 					String target = this.consume(TokenList.TS_ID).value;
 					this.consume(TokenList.TS_ASSIGN);
 					Expression expr = this.expression();
-					classSt.addStaticField(target, expr.eval());
+					classSt.addStaticField(target, expr.eval(), caller);
 				} else throw new UnsupportedStatementException("invalid class declaration");
 			} else throw new UnsupportedStatementException("invalid class declaration");
 			this.matches(TokenList.TS_SEMICOLON);

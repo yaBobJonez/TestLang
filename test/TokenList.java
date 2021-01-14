@@ -39,6 +39,8 @@ public final class TokenList {
 	public static final String TA_CONTINUE = "CONTINUE";
 	public static final String TA_RETURN = "RETURN";
 	public static final String TA_STATIC = "STATIC";
+	public static final String TA_PUBLIC = "PUBLIC";
+	public static final String TA_PRIVATE = "PRIVATE";
 	public static final String TA_USE = "USE";
 	public static final String TA_CASE = "CASE";
 	public static final String TA_DEFAULT = "DEFAULT";

@@ -16,6 +16,7 @@ public class ClassDefStatement implements Statement {
 	public List<AssignmentNode> fields = new ArrayList<>();
 	public List<FuncDefStatement> methods = new ArrayList<>();
 	public MapValue staticContainer = new MapValue();
+	public List<String> privateList = new ArrayList<>();
 	public ClassDefStatement(String name) {
 		this.name = name;
 	}
@@ -25,17 +26,22 @@ public class ClassDefStatement implements Statement {
 		classValue.fields = this.fields;
 		classValue.methods = this.methods;
 		classValue.staticContainer = this.staticContainer;
+		classValue.privateList = this.privateList;
 		Classes.set(this.name, classValue);
 	}
-	public void addField(AssignmentNode field){
+	public void addField(AssignmentNode field, byte caller) throws Exception{
 		this.fields.add(field);
-	} public void addMethod(FuncDefStatement field){
+		if(caller == 1) this.privateList.add( ((VariableNode)field.target).token.value );
+	} public void addMethod(FuncDefStatement field, byte caller){
 		this.methods.add(field);
+		if(caller == 1) this.privateList.add(field.name);
 	}
-	public void addStaticField(String key, Value value){
+	public void addStaticField(String key, Value value, byte caller){
 		this.staticContainer.set(new StringValue(key), value);
-	} public void addStaticMethod(FuncDefStatement func){
+		if(caller == 1) this.privateList.add(key);
+	} public void addStaticMethod(FuncDefStatement func, byte caller){
 		this.staticContainer.set(new StringValue(func.name), new FunctionValue(new UserFunction(func.args, func.body)) );
+		if(caller == 1) this.privateList.add(func.name);
 	}
 	@Override
 	public void accept(Visitor visitor) throws Exception {

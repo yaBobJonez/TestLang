@@ -1,11 +1,14 @@
 package lib;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class InstanceValue implements Value {
 	public String className;
 	public MapValue container;
 	public ClassMethod constructor; //TODO multiple constructors
+	public List<String> privateList = new ArrayList<>();
 	public InstanceValue(String className) {
 		this.className = className;
 		this.container = new MapValue();
@@ -15,9 +18,11 @@ public class InstanceValue implements Value {
 	} public void addMethod(String key, ClassMethod value){
 		this.container.set(new StringValue(key), new FunctionValue(value));
 		if(key.equals("constructor")) this.constructor = value;
-	} public Value get(Value name){
+	} public Value get(Value name) throws Exception{
+		//if(caller == (byte)1 && privateList.contains(name.asString())) throw new IllegalPropertyAccessException(name.asString());
 		return this.container.get(name);
-	} public void set(Value key, Value value){
+	} public void set(Value key, Value value) throws Exception{
+		//if(caller == (byte)1 && privateList.contains(key.asString())) throw new IllegalPropertyAccessException(key.asString());
 		this.container.set(key, value);
 	}
 	public void callConstructor(Value[] args) throws Exception{

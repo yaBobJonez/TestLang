@@ -6,12 +6,14 @@ import test.Token;
 
 import java.util.*;
 
+import exceptions.IllegalPropertyAccessException;
 import exceptions.TypeConsumingException;
 
 public class ContainerAccessNode implements Expression, Accessible {
 	public Expression expr;
 	public boolean exprIsVar;
 	public List<Expression> path;
+	public byte caller;
 	public ContainerAccessNode(Expression expr, List<Expression> path) {
 		this.expr = expr;
 		this.exprIsVar = expr instanceof VariableNode;
@@ -31,7 +33,11 @@ public class ContainerAccessNode implements Expression, Accessible {
 		if(container instanceof ArrayValue) return ((ArrayValue)container).get(lastIndex.asInteger());
 		else if(container instanceof MapValue) return ((MapValue)container).get(lastIndex);
 		else if(container instanceof StringValue) return ((StringValue)container).access(lastIndex);
-		else if(container instanceof InstanceValue) return ((InstanceValue)container).get(lastIndex);
+		else if(container instanceof InstanceValue){ //Honestly, IDK how this even works...
+			InstanceValue obj = ((InstanceValue)container);
+			if(obj.privateList.contains(lastIndex.asString())) throw new IllegalPropertyAccessException(lastIndex.asString());
+			return obj.get(lastIndex);
+		}
 		else if(container instanceof ClassValue) return ((ClassValue)container).get(lastIndex);
 		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	} public Value set(Value value) throws Exception {
@@ -70,7 +76,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 		return this.index(this.path.size() - 1);
 	}
 	public String toString(){
-		return "ArrayAccess{name = " + this.expr.toString() + "; path = " + this.path + "}";
+		return "ArrayAccess{name = " + this.expr.toString() + "; path = " + this.path + "CALLER!: "+caller+"}";
 	}
 	@Override
 	public void accept(Visitor visitor) throws Exception {

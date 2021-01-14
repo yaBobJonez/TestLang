@@ -27,7 +27,8 @@ public class ObjectNode implements Expression {
 			obj.addField(field, asgn.eval());
 		} for(FuncDefStatement method : classVal.methods){
 			obj.addMethod(method.name, new ClassMethod(method.args, method.body, obj));
-		} int size = this.consArgs.size();
+		} obj.privateList = classVal.privateList;
+		int size = this.consArgs.size();
 		Value[] args = new Value[size];
 		for(int i = 0; i < size; i++){
 			args[i] = this.consArgs.get(i).eval();
