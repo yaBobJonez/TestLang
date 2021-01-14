@@ -13,7 +13,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 	public Expression expr;
 	public boolean exprIsVar;
 	public List<Expression> path;
-	public byte caller;
+	//public byte caller;
 	public ContainerAccessNode(Expression expr, List<Expression> path) {
 		this.expr = expr;
 		this.exprIsVar = expr instanceof VariableNode;
@@ -34,18 +34,31 @@ public class ContainerAccessNode implements Expression, Accessible {
 		else if(container instanceof MapValue) return ((MapValue)container).get(lastIndex);
 		else if(container instanceof StringValue) return ((StringValue)container).access(lastIndex);
 		else if(container instanceof InstanceValue){ //Honestly, IDK how this even works...
-			InstanceValue obj = ((InstanceValue)container);
+			InstanceValue obj = (InstanceValue)container;
 			if(obj.privateList.contains(lastIndex.asString())) throw new IllegalPropertyAccessException(lastIndex.asString());
 			return obj.get(lastIndex);
 		}
-		else if(container instanceof ClassValue) return ((ClassValue)container).get(lastIndex);
+		else if(container instanceof ClassValue){
+			ClassValue classValue = (ClassValue)container;
+			if(classValue.privateList.contains(lastIndex.asString())) throw new IllegalPropertyAccessException(lastIndex.asString());
+			return classValue.get(lastIndex);
+		}
 		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	} public Value set(Value value) throws Exception {
 		Value container = this.getContainer();
 		Value lastIndex = this.lastIndex();
 		if(container instanceof ArrayValue){ ((ArrayValue)container).set(lastIndex.asInteger(), value); return value; }
 		else if(container instanceof MapValue){ ((MapValue)container).set(lastIndex, value); return value; }
-		else if(container instanceof InstanceValue){ ((InstanceValue)container).set(lastIndex, value); return value; }
+		else if(container instanceof InstanceValue){
+			InstanceValue obj = (InstanceValue)container;
+			if(obj.privateList.contains(lastIndex.asString())) throw new IllegalPropertyAccessException(lastIndex.asString());
+			obj.set(lastIndex, value); return value;
+		}
+		else if(container instanceof ClassValue){
+			ClassValue classValue = (ClassValue)container;
+			if(classValue.privateList.contains(lastIndex.asString())) throw new IllegalPropertyAccessException(lastIndex.asString());
+			classValue.set(lastIndex, value); return value;
+		}
 		else throw new TypeConsumingException("array", container.getClass().getSimpleName());
 	}
 	public Value getContainer() throws Exception{
@@ -76,7 +89,7 @@ public class ContainerAccessNode implements Expression, Accessible {
 		return this.index(this.path.size() - 1);
 	}
 	public String toString(){
-		return "ArrayAccess{name = " + this.expr.toString() + "; path = " + this.path + "CALLER!: "+caller+"}";
+		return "ArrayAccess{name = " + this.expr.toString() + "; path = " + this.path + "}";
 	}
 	@Override
 	public void accept(Visitor visitor) throws Exception {

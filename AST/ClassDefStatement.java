@@ -2,13 +2,16 @@ package AST;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import lib.Classes;
 import lib.FunctionValue;
+import lib.InstanceValue;
 import lib.MapValue;
 import lib.StringValue;
 import lib.UserFunction;
 import lib.Value;
+import lib.ClassMethod;
 import lib.ClassValue;
 
 public class ClassDefStatement implements Statement {
@@ -40,7 +43,9 @@ public class ClassDefStatement implements Statement {
 		this.staticContainer.set(new StringValue(key), value);
 		if(caller == 1) this.privateList.add(key);
 	} public void addStaticMethod(FuncDefStatement func, byte caller){
-		this.staticContainer.set(new StringValue(func.name), new FunctionValue(new UserFunction(func.args, func.body)) );
+		InstanceValue dummyObj = new InstanceValue(this.name);
+		dummyObj.container = this.staticContainer; //Optimization: may be better to \/ create "ClassStaticMethod" instead of dummyObj.
+		this.staticContainer.set(new StringValue(func.name), new FunctionValue(new ClassMethod(func.args, func.body, dummyObj)) );
 		if(caller == 1) this.privateList.add(func.name);
 	}
 	@Override
@@ -49,6 +54,7 @@ public class ClassDefStatement implements Statement {
 	}
 	@Override
 	public String toString() {
-		return "ClassStatement{name = "+this.name + "; fields = "+this.fields + "; methods = "+this.methods + "}";
+		return "ClassStatement{name = "+this.name + "; fields = "+this.fields + "; methods = "+this.methods + "; statics = "+
+				this.staticContainer + "}";
 	}
 }
