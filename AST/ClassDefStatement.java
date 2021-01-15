@@ -16,6 +16,7 @@ import lib.ClassValue;
 
 public class ClassDefStatement implements Statement {
 	public String name;
+	public List<String> extendsClasses = new ArrayList<>();
 	public List<AssignmentNode> fields = new ArrayList<>();
 	public List<FuncDefStatement> methods = new ArrayList<>();
 	public MapValue staticContainer = new MapValue();
@@ -26,10 +27,18 @@ public class ClassDefStatement implements Statement {
 	@Override
 	public void execute() throws Exception {
 		ClassValue classValue = new ClassValue(this.name);
-		classValue.fields = this.fields;
-		classValue.methods = this.methods;
-		classValue.staticContainer = this.staticContainer;
-		classValue.privateList = this.privateList;
+		if(!this.extendsClasses.isEmpty()){
+			for(String extClassName : this.extendsClasses){
+				ClassValue extClassValue = Classes.get(extClassName);
+				classValue.fields.addAll(extClassValue.fields);
+				classValue.methods.addAll(extClassValue.methods);
+				classValue.staticContainer.array.putAll(extClassValue.staticContainer.array);
+				classValue.privateList.addAll(extClassValue.privateList);
+			}
+		} classValue.fields.addAll(this.fields);
+		classValue.methods.addAll(this.methods);
+		classValue.staticContainer.array.putAll(this.staticContainer.array);
+		classValue.privateList.addAll(this.privateList);
 		Classes.set(this.name, classValue);
 	}
 	public void addField(AssignmentNode field, byte caller) throws Exception{

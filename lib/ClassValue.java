@@ -12,7 +12,7 @@ public class ClassValue implements Value {
 	public MapValue staticContainer = new MapValue();
 	public List<AssignmentNode> fields = new ArrayList<>();
 	public List<FuncDefStatement> methods = new ArrayList<>();
-	public List<String> privateList = new ArrayList<>(); //TODO private statics
+	public List<String> privateList = new ArrayList<>();
 	public ClassValue(String className) {
 		this.className = className;
 	}

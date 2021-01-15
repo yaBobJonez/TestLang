@@ -73,6 +73,7 @@ public class Lexer {
 			case "switch": return new Token(TokenList.TS_SWITCH, null);
 			case "include": return new Token(TokenList.TS_INCLUDE, null);
 			case "class": return new Token(TokenList.TS_CLASS, null);
+			case "extends": return new Token(TokenList.TS_EXTENDS, null);
 			case "break": return new Token(TokenList.TA_BREAK, null);
 			case "continue": return new Token(TokenList.TA_CONTINUE, null);
 			case "return": return new Token(TokenList.TA_RETURN, null);

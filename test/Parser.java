@@ -4,6 +4,8 @@ import java.util.*;
 import AST.*;
 import exceptions.*;
 import lib.CaseValue;
+import lib.ClassValue;
+import lib.Classes;
 import lib.UserFunction;
 
 /*
@@ -205,6 +207,7 @@ public class Parser {
 	} public Statement declareClass() throws Exception{
 		String className = this.consume(TokenList.TS_ID).value;
 		ClassDefStatement classSt = new ClassDefStatement(className);
+		if(matches(TokenList.TS_EXTENDS)) classSt.extendsClasses.add(this.consume(TokenList.TS_ID).value);
 		this.consume(TokenList.TO_LCURL); //TODO extends/implements before this
 		while(!matches(TokenList.TO_RCURL)){
 			byte caller = 0;

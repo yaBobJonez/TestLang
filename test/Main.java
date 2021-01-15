@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("class Test { private static var = 7; private static function a() print this->var; static function b() this->a(); } Test->b(); print Test->var;", options); return; }
+		if(args.length == 0){ run("class Test { static var = 7; } class Nice extends Test {} print Nice->var;", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){
