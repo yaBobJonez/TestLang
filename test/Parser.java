@@ -81,6 +81,8 @@ public class Parser {
 			return this.defineFunction();
 		} else if(matches(TokenList.TS_CLASS)){
 			return this.declareClass();
+		} else if(matches(TokenList.TS_INTERFACE)){
+			return this.declareInterface();
 		} else if(this.getToken(0).type == TokenList.TS_ID && this.getToken(1).type == TokenList.TO_LPAR){
 			return new NodeStatement(this.functionChain(this.qualifiedName()));
 		}
@@ -208,6 +210,7 @@ public class Parser {
 		String className = this.consume(TokenList.TS_ID).value;
 		ClassDefStatement classSt = new ClassDefStatement(className);
 		if(matches(TokenList.TS_EXTENDS)) classSt.extendsClasses.add(this.consume(TokenList.TS_ID).value);
+		if(matches(TokenList.TS_IMPLEMENTS)) classSt.implementInterfaces.add(this.consume(TokenList.TS_ID).value);
 		this.consume(TokenList.TO_LCURL); //TODO extends/implements before this
 		while(!matches(TokenList.TO_RCURL)){
 			byte caller = 0;
@@ -219,7 +222,7 @@ public class Parser {
 				if(matches(TokenList.TS_ASSIGN)) expr = this.expression();
 				AssignmentNode field = new AssignmentNode((Accessible)target, null, expr);
 				classSt.addField(field, caller);
-			} else if(matches(TokenList.TA_STATIC)){
+			} else if(matches(TokenList.TA_STATIC)){ //TODO roll this construction like in Private
 				if(matches(TokenList.TS_FUNCTION)) classSt.addStaticMethod(this.defineFunction(), caller);
 				else if(this.getToken(0).type == TokenList.TS_ID){
 					String target = this.consume(TokenList.TS_ID).value;
@@ -230,6 +233,22 @@ public class Parser {
 			} else throw new UnsupportedStatementException("invalid class declaration");
 			this.matches(TokenList.TS_SEMICOLON);
 		} return classSt;
+	} public Statement declareInterface() throws Exception{
+		String name = this.consume(TokenList.TS_ID).value;
+		InterfaceDefStatement intSt = new InterfaceDefStatement(name);
+		this.consume(TokenList.TO_LCURL);
+		while(!matches(TokenList.TO_RCURL)){
+			byte caller = 0;
+			boolean isStatic = false;
+			if(matches(TokenList.TA_PRIVATE)) caller = 1;
+			if(matches(TokenList.TA_STATIC)) isStatic = true;
+			if(matches(TokenList.TS_FUNCTION)){
+				String fnName = this.consume(TokenList.TS_ID).value;
+				Arguments args = this.arguments();
+				intSt.addMethod(new FuncDefStatement(fnName, args, new BlockStatement()), isStatic, caller);
+			} else if(this.getToken(0).type == TokenList.TS_ID) intSt.addField(this.consume(TokenList.TS_ID).value, isStatic, caller);
+			this.matches(TokenList.TS_SEMICOLON);
+		} return intSt;
 	}
 	public Statement StateOrBlock() throws Exception{
 		if(this.getToken(0).type == TokenList.TO_LCURL){ return this.blockState(); }

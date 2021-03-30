@@ -81,6 +81,10 @@ public abstract class AbstractVisitor implements Visitor {
 		//TODO fast "msg" check
 	}
 	@Override
+	public void visit(InterfaceDefStatement s) throws Exception {
+		for(FuncDefStatement f : s.methods) f.body.accept(this);
+	}
+	@Override
 	public void visit(LogicNode s) throws Exception {
 		s.left.accept(this);
 		s.right.accept(this);

@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("class Test { static var = 7; } class Nice extends Test {} print Nice->var;", options); return; }
+		if(args.length == 0){ run("interface A { private static x; function f(); } class B implements A { private static x = 3; function f(){} }", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){
@@ -35,11 +35,11 @@ public class Main
 			System.exit(1);
 		}
 		parseres.accept(new FunctionsPresetter());
-		try {
+		//try {
 			parseres.execute();
-		} catch(Exception e) {
-			handleNegative(Thread.currentThread(), e);
-		}
+		//} catch(Exception e) {
+		//	handleNegative(Thread.currentThread(), e);
+		//}
 	}
 	public static void handleNegative(Thread thread, Throwable throwable){
 		System.err.print(throwable.getMessage() + " in thread " + thread.getName() + ".\nStacktrace:\n");
