@@ -9,9 +9,7 @@ import lib.Classes;
 import lib.UserFunction;
 
 /*
- * In Memory of my loved Grandmother,
- * who passed away 10/05/2020...
- * Rest Easy, It won't get worse...
+ * Hope couldn't bring Hope for Hope...
  */
 
 public class Parser {
@@ -77,6 +75,7 @@ public class Parser {
 		else if(matches(TokenList.TA_RETURN)){ return new ReturnStatement(this.expression()); }
 		else if(matches(TokenList.TA_USE)){ return new UseStatement(this.expression()); }
 		else if(matches(TokenList.TS_INCLUDE)){ return new IncludeStatement(this.expression()); }
+		else if(matches(TokenList.TS_DELETE)){ return new DeleteStatement(this.qualifiedName()/*TODO comma-separated; null-unsafe*/); }
 		else if(matches(TokenList.TS_FUNCTION)){
 			return this.defineFunction();
 		} else if(matches(TokenList.TS_CLASS)){

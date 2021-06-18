@@ -11,7 +11,7 @@ public class Main
 	{
 		Options options = new Options();
 		//Testing purposes
-		if(args.length == 0){ run("interface A { private static x; function f(); } class B implements A { private static x = 3; function f(){} }", options); return; }
+		if(args.length == 0){ run("arr = [\"A\", [2, 4], true]; delete arr[1][0]; assoc = {\"a\": 2, \"b\": 3}; delete assoc[\"b\"]; var = true; delete var; class Class{} obj = new Class(); delete obj;", options); return; }
 		String input = Loader.readSource(args[0]);
 		for(int i = 1; i < args.length; i++){
 			switch(args[i]){

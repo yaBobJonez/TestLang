@@ -83,6 +83,7 @@ public class Lexer {
 			case "public": return new Token(TokenList.TA_PUBLIC, null);
 			case "private": return new Token(TokenList.TA_PRIVATE, null);
 			case "use": return new Token(TokenList.TA_USE, null);
+			case "delete": return new Token(TokenList.TS_DELETE, null);
 			case "case": return new Token(TokenList.TA_CASE, null);
 			case "default": return new Token(TokenList.TA_DEFAULT, null);
 			case "new": return new Token(TokenList.TA_NEW, null);

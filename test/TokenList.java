@@ -30,6 +30,7 @@ public final class TokenList {
 	public static final String TS_FUNCTION = "FUNCTION";
 	public static final String TS_SWITCH = "SWITCH";
 	public static final String TS_INCLUDE = "INCLUDE"; //Formerly: TS_IMPORT = "IMPORT"
+	public static final String TS_DELETE = "DELETE";
 	public static final String TS_CLASS = "CLASS";
 	public static final String TS_EXTENDS = "EXTENDS";
 	public static final String TS_INTERFACE = "INTERFACE";

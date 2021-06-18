@@ -11,12 +11,10 @@ import exceptions.TypeConsumingException;
 
 public class ContainerAccessNode implements Expression, Accessible {
 	public Expression expr;
-	public boolean exprIsVar;
 	public List<Expression> path;
 	//public byte caller;
 	public ContainerAccessNode(Expression expr, List<Expression> path) {
 		this.expr = expr;
-		this.exprIsVar = expr instanceof VariableNode;
 		this.path = path;
 	}
 	public ContainerAccessNode(Token var, List<Expression> path) {
