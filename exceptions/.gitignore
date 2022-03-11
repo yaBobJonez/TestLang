@@ -1,9 +1,0 @@
-/ArgumentsMismatchException.class
-/FunctionDoesNotExistException.class
-/IllegalOperationException.class
-/InvalidExpressionException.class
-/LexerException.class
-/TypeConsumingException.class
-/UnexpectedTokenException.class
-/UnsupportedStatementException.class
-/VariableDoesNotExistException.class
