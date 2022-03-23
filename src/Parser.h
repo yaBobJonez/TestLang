@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 #include "Token.h"
-#include "Statement.h"
 #include "Nodes.h"
+#include "Statements.h"
 
 using namespace std;
 
@@ -14,49 +14,83 @@ class Parser {
         vector<Token> tokens;
         int position;
         int size;
-        Statement* addition(){
-            Statement* result = this->multiplication();
+        Statement* statement(){
+        	if(matches(TokenList::OUTPUT)) return new OutputStatement(this->expression());
+        	else return this->assignmentState();
+        }
+        Statement* assignmentState(){
+        	Token curr = this->getToken(0);
+        	if(matches(TokenList::ID) && this->getToken(0).type == TokenList::ASSIGN){
+        		std::string var = curr.value;
+        		consume(TokenList::ASSIGN);
+        		return new AssignmentStatement(var, this->expression());
+        	} std::cerr<<"Unsupported statement."; exit(EXIT_FAILURE);
+        }
+        Expression* expression(){
+        	return this->concatenation();
+        }
+        Expression* concatenation(){
+        	Expression* result = this->addition();
+        	while(true){
+        		if(matches(TokenList::CONCAT)){
+        			result = new BinaryNode(result, "<>", this->addition()); continue;
+        		} break;
+        	} return result;
+        }
+        Expression* addition(){
+            Expression* result = this->multiplication();
             while(true){
                 if(matches(TokenList::ADD)){
-                    result = new BinaryNode(result, '+', this->multiplication()); continue; //TODO verify each
+                    result = new BinaryNode(result, "+", this->multiplication()); continue;
                 } else if(matches(TokenList::SUBTRACT)){
-                    result = new BinaryNode(result, '-', this->multiplication()); continue;
+                    result = new BinaryNode(result, "-", this->multiplication()); continue;
                 } break;
             } return result;
         }
-        Statement* multiplication(){
-            Statement* result = this->unary();
+        Expression* multiplication(){
+            Expression* result = this->exponentiation();
             while(true){
                 if(matches(TokenList::MULTIPLY)){
-                    result = new BinaryNode(result, '*', this->unary()); continue; //TODO verify each
+                    result = new BinaryNode(result, "*", this->exponentiation()); continue;
                 } else if(matches(TokenList::DIVIDE)){
-                    result = new BinaryNode(result, '/', this->unary()); continue;
-                } else if(matches(TokenList::POWER)){
-                    result = new BinaryNode(result, '^', this->unary()); continue;
-                } else if(matches(TokenList::MODULO)){
-                    result = new BinaryNode(result, '%', this->unary()); continue;
+                    result = new BinaryNode(result, "/", this->exponentiation()); continue;
                 } break;
             } return result;
         }
-        Statement* unary(){
-            if(matches(TokenList::SUBTRACT)){
-                Statement* intlValue = this->value();
-                return new UnaryNode('-', intlValue); //TODO verify
-            }
-            return this->value();
+        Expression* exponentiation(){
+        	Expression* result = this->unary();
+        	while(true){
+        		if(matches(TokenList::POWER)){
+        			result = new BinaryNode(result, "^", this->unary()); continue;
+                } else if(matches(TokenList::MODULO)){
+                    result = new BinaryNode(result, "%", this->unary()); continue;
+                } break;
+        	} return result;
         }
-        Statement* value(){
+        Expression* unary(){
+            if(matches(TokenList::SUBTRACT)){
+                return new UnaryNode('-', this->factor());
+            } return this->factor();
+        }
+        Expression* factor(){
             Token curr = this->getToken(0);
             if(matches(TokenList::INT)){
-                Statement* intlValueNode = new ValueNode(curr.value); //TODO clear
-                return intlValueNode;
+                return new ValueNode(curr);
             } else if(matches(TokenList::DOUBLE)){
-                return new ValueNode(curr.value); //TODO verify this is okay
-            } else { cerr<<endl<<"Unrecognized token "+std::to_string(this->getToken(0).type)+": "+std::to_string(this->getToken(0).value); exit(EXIT_FAILURE); }
+                return new ValueNode(curr);
+            } else if(matches(TokenList::STRING)){
+            	return new ValueNode(curr);
+            } else if(matches(TokenList::ID)){
+            	return new VariableNode(curr);
+            } std::cerr<<"Unrecognized token "<<std::to_string(curr.type)<<": "<<curr.value<<"."; exit(EXIT_FAILURE);
         }
     public:
         Parser(vector<Token> tokens) : tokens(tokens), position(0), size(tokens.size()){}
-        Statement* parse(){ return this->addition(); }
+        std::vector<Statement*> parse(){
+        	std::vector<Statement*> result;
+        	while(!matches(TokenList::T_EOF)) result.push_back(this->statement());
+        	return result;
+        }
         bool matches(TokenList type){
             Token curr_token = this->getToken(0);
             if(curr_token.type != type) return false;
@@ -70,7 +104,7 @@ class Parser {
         }
         Token consume(TokenList type){
             Token curr_token = this->getToken(0);
-            if(curr_token.type != type){ cerr<<endl<<"Unexpected token "+std::to_string(curr_token.value); exit(EXIT_FAILURE); }
+            if(curr_token.type != type){ cerr<<"Unexpected token "<<curr_token.value<<"."; exit(EXIT_FAILURE); }
             this->position += 1;
             return curr_token;
         }

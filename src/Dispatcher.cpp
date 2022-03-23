@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
         if(input.empty() || input == "exit") return 0;
         Lexer lx(input);
         Parser pr(lx.tokenize());
-        cout << "< " << pr.parse()->eval() << endl;
+        for(Statement* st : pr.parse()) st->execute();
     }
     return 0;
 }

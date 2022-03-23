@@ -4,8 +4,14 @@
 #include <iostream>
 
 enum TokenList {
+    ID,
+    OUTPUT,
     INT,
     DOUBLE,
+    BOOL,
+    STRING,
+    ASSIGN,
+    CONCAT,
     ADD,
     SUBTRACT,
     MULTIPLY,
@@ -18,8 +24,8 @@ enum TokenList {
 class Token {
     public:
         TokenList type;
-        double value;
-        Token(TokenList type, double value) : type(type), value(value) {}
+        std::string value;
+        Token(TokenList type, std::string value) : type(type), value(value) {}
 };
 std::ostream& operator<<(std::ostream& stream, const Token& that){
     return stream << "Token[" << that.type << ": " << that.value << "]";
