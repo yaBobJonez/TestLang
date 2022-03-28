@@ -14,6 +14,7 @@ class Value {
 	virtual int asInteger() = 0;
 	virtual double asDouble() = 0;
 	virtual bool asBoolean() = 0;
+	virtual bool equals(Value* other) = 0;
 };
 
 class StringValue : public Value {
@@ -25,17 +26,23 @@ class StringValue : public Value {
 	std::string asString(){
 		return this->value;
 	} int asInteger(){
-		try { return std::stoi(this->value); }
+		try { return (this->value=="")? 0 : std::stoi(this->value); }
 		catch(const std::exception& e){
 			std::cerr<<"Cannot cast string \""<<this->value<<"\" to integer.";
 			std::exit(EXIT_FAILURE); }
 	} double asDouble(){
-		try { return std::stod(this->value); }
+		try { return (this->value=="")? 0.0 : std::stod(this->value); }
 		catch(const std::exception& e){
 			std::cerr<<"Cannot cast string \""<<this->value<<"\" to double.";
 			std::exit(EXIT_FAILURE); }
 	} bool asBoolean(){
-		return this->value == "1" || this->value == "true";
+		return this->value != "";
+	}
+	bool equals(Value* other){
+		TokenList t = other->getType();
+		if(t==TokenList::STRING) return this->value == other->asString();
+		else if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
+		else return this->asDouble() == other->asDouble();
 	}
 };
 class IntegerValue : public Value {
@@ -53,6 +60,11 @@ class IntegerValue : public Value {
 	} bool asBoolean(){
 		return this->value != 0;
 	}
+	bool equals(Value* other){
+		TokenList t = other->getType();
+		if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
+		else return this->value== other->asDouble();
+	}
 };
 class DoubleValue : public Value {
 	private:
@@ -69,6 +81,11 @@ class DoubleValue : public Value {
 	} bool asBoolean(){
 		return this->value != 0.0;
 	}
+	bool equals(Value* other){
+		TokenList t = other->getType();
+		if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
+		else return this->value == other->asDouble();
+	}
 };
 class BooleanValue : public Value {
 	private:
@@ -84,6 +101,9 @@ class BooleanValue : public Value {
 		return this->value?1.0:0.0;
 	} bool asBoolean(){
 		return this->value;
+	}
+	bool equals(Value* other){
+		return this->asBoolean() == other->asBoolean();
 	}
 };
 

@@ -4,12 +4,17 @@
 #include <iostream>
 
 enum TokenList {
+    SEMICOLON,
     ID,
     OUTPUT,
     INT,
     DOUBLE,
     BOOL,
     STRING,
+    LPAR,
+    RPAR,
+    LBRACE,
+    RBRACE,
     ASSIGN,
     CONCAT,
     ADD,
@@ -18,6 +23,25 @@ enum TokenList {
     DIVIDE,
     MODULO,
     POWER,
+    QUESTION,
+    COLON,
+    LESS,
+    LTOREQ,
+    EQUALS,
+    NOTEQ,
+    LNOT,
+    GREATER,
+    GTOREQ,
+    LAND,
+    LOR,
+    BNOT,
+    BAND,
+    BOR,
+    BXOR,
+    BLSH,
+    BRSH,
+    IF,
+    ELSE,
     T_EOF
 };
 

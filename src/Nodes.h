@@ -11,6 +11,21 @@ class Expression {
     virtual Value* eval() = 0;
 };
 
+class TernaryNode : public Expression {
+	public:
+		Expression* condition;
+		Expression* trueExpr;
+		Expression* falseExpr;
+		TernaryNode(Expression* cond, Expression* t, Expression* f) : condition(cond), trueExpr(t), falseExpr(f){}
+		Value* eval(){
+			if(this->condition->eval()->asBoolean()) return this->trueExpr->eval();
+			else return this->falseExpr->eval();
+		}
+};
+std::ostream& operator<<(std::ostream& stream, const TernaryNode& that){
+	return stream << "("<<that.condition<<"? "<<that.trueExpr<<" : "<<that.falseExpr<<")";
+}
+
 class BinaryNode : public Expression {
     public:
         Expression* left;
@@ -28,6 +43,19 @@ class BinaryNode : public Expression {
             else if(o== "^") return this->power(left, right);
             else if(o== "%") return this->modulo(left, right);
             else if(o== "<>") return this->concatenate(left, right);
+            else if(o== "<") return this->lt(left, right);
+            else if(o== "<=") return this->ltOrEq(left, right);
+            else if(o== "==") return this->eq(left, right);
+            else if(o== "!=") return this->notEq(left, right);
+            else if(o== ">") return this->gt(left, right);
+            else if(o== ">=") return this->gtOrEq(left, right);
+            else if(o== "&&") return this->lAnd(left, right);
+            else if(o== "||") return this->lOr(left, right);
+            else if(o== "&") return this->bAnd(left, right);
+            else if(o== "|") return this->bOr(left, right);
+            else if(o== "~=") return this->bXor(left, right);
+            else if(o== "<<") return this->bLSh(left, right);
+            else if(o== ">>") return this->bRSh(left, right);
             std::cerr << "Unknown operator "<<this->operator_<<"."; std::exit(EXIT_FAILURE);
         }
     private:
@@ -45,6 +73,32 @@ class BinaryNode : public Expression {
     		return new DoubleValue(std::pow(left->asDouble(), right->asDouble()));
     	} Value* concatenate(Value* left, Value* right){
     		return new StringValue(left->asString() + right->asString());
+    	} Value* lt(Value* left, Value* right){
+    		return new BooleanValue(left->asDouble() < right->asDouble());
+    	} Value* ltOrEq(Value* left, Value* right){
+    		return new BooleanValue(left->asDouble() <= right->asDouble());
+    	} Value* eq(Value* left, Value* right){
+    		return new BooleanValue(left->equals(right));
+    	} Value* notEq(Value* left, Value* right){
+    		return new BooleanValue(! left->equals(right));
+    	} Value* gt(Value* left, Value* right){
+    		return new BooleanValue(left->asDouble() > right->asDouble());
+    	} Value* gtOrEq(Value* left, Value* right){
+    		return new BooleanValue(left->asDouble() >= right->asDouble());
+    	} Value* lAnd(Value* left, Value* right){
+    		return left->asBoolean()? right : left;
+    	} Value* lOr(Value* left, Value* right){
+    		return left->asBoolean()? left : right;
+    	} Value* bAnd(Value* left, Value* right){
+    		return new IntegerValue(left->asInteger() & right->asInteger());
+    	} Value* bOr(Value* left, Value* right){
+    		return new IntegerValue(left->asInteger() | right->asInteger());
+    	} Value* bXor(Value* left, Value* right){
+    		return new IntegerValue(left->asInteger() ^ right->asInteger());
+    	} Value* bLSh(Value* left, Value* right){
+    		return new IntegerValue(left->asInteger() << right->asInteger());
+    	} Value* bRSh(Value* left, Value* right){
+    		return new IntegerValue(left->asInteger() >> right->asInteger());
     	}
 };
 std::ostream& operator<<(std::ostream& stream, const BinaryNode& that){
@@ -60,11 +114,17 @@ class UnaryNode : public Expression {
             Value* right = (*this->right).eval();
             char o = this->operator_;
             if(o== '-') return this->negate(right);
+            else if(o== '!') return this->lNot(right);
+            else if(o== '~') return this->bNot(right);
             std::cerr<<"Unknown operator "<<this->operator_<<"."; exit(EXIT_FAILURE);
         }
     private:
     	Value* negate(Value* right){
     		return new DoubleValue(- right->asDouble());
+    	} Value* lNot(Value* right){
+    		return new BooleanValue(! right->asBoolean());
+    	} Value* bNot(Value* right){
+    		return new IntegerValue(~ right->asInteger());
     	}
 };
 std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
@@ -82,6 +142,7 @@ class VariableNode : public Expression {
 std::ostream& operator<<(std::ostream& stream, const VariableNode& that){
     return stream << that.token;
 }
+
 class ValueNode : public Expression {
 	public:
 	Token token;
