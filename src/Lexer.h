@@ -41,6 +41,10 @@ class Lexer {
         	else if(word == "false") return Token(TokenList::BOOL, "0");
         	else if(word == "if") return Token(TokenList::IF, "");
         	else if(word == "else") return Token(TokenList::ELSE, "");
+        	else if(word == "switch") return Token(TokenList::SWITCH, "");
+        	else if(word == "case") return Token(TokenList::CASE, "");
+        	else if(word == "default") return Token(TokenList::DEFAULT, "");
+        	else if(word == "continue") return Token(TokenList::CONTINUE, "");
         	else return Token(TokenList::ID, word);
         }
         Token buildString(char start){
@@ -53,23 +57,27 @@ class Lexer {
         	std::exit(EXIT_FAILURE);
         }
         Token buildOperator(){
-        	std::string op;
-        	while(std::string(";=+-*/^%(){}<>!~&|?:").find(this->curr_char) != std::string::npos){
+        	std::string op; op+=this->curr_char;
+        	this->advance();
+        	if(op == ";") return Token(TokenList::SEMICOLON, "");
+        	else if(op == "^") return Token(TokenList::POWER, "");
+        	else if(op == "%") return Token(TokenList::MODULO, "");
+        	else if(op == "(") return Token(TokenList::LPAR, "");
+        	else if(op == ")") return Token(TokenList::RPAR, "");
+        	else if(op == "[") return Token(TokenList::LBRACK, "");
+        	else if(op == "]") return Token(TokenList::RBRACK, "");
+        	else if(op == "{") return Token(TokenList::LBRACE, "");
+        	else if(op == "}") return Token(TokenList::RBRACE, "");
+        	else if(op == ",") return Token(TokenList::COMMA, "");
+        	while(std::string(";=+-*/^%()[]{}<>!~&|,?:").find(this->curr_char) != std::string::npos){
         		op += this->curr_char;
         		this->advance();
-        	} if(op == ";") return Token(TokenList::SEMICOLON, "");
-        	else if(op == "=") return Token(TokenList::ASSIGN, "");
+        	} if(op == "=") return Token(TokenList::ASSIGN, "");
         	else if(op == "+") return Token(TokenList::ADD, "");
         	else if(op == "-") return Token(TokenList::SUBTRACT, "");
         	else if(op == "*") return Token(TokenList::MULTIPLY, "");
         	else if(op == "/") return Token(TokenList::DIVIDE, "");
-        	else if(op == "^") return Token(TokenList::POWER, "");
-        	else if(op == "%") return Token(TokenList::MODULO, "");
         	else if(op == "<>") return Token(TokenList::CONCAT, "");
-        	else if(op == "(") return Token(TokenList::LPAR, "");
-        	else if(op == ")") return Token(TokenList::RPAR, "");
-        	else if(op == "{") return Token(TokenList::LBRACE, "");
-        	else if(op == "}") return Token(TokenList::RBRACE, "");
         	else if(op == "<") return Token(TokenList::LESS, "");
         	else if(op == "<=") return Token(TokenList::LTOREQ, "");
         	else if(op == "!") return Token(TokenList::LNOT, "");
@@ -103,7 +111,7 @@ class Lexer {
                 else if(string("0123456789").find(this->curr_char) != string::npos) tokens.push_back(this->buildNumber());
                 else if(this->curr_char=='"'||this->curr_char=='\'') tokens.push_back(this->buildString(this->curr_char));
                 else if(std::string("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789").find(this->curr_char) != std::string::npos) tokens.push_back(this->buildWord());
-                else if(std::string(";=+-*/^%(){}<>!~&|?:").find(this->curr_char) != std::string::npos) tokens.push_back(this->buildOperator());
+                else if(std::string(";=+-*/^%()[]{}<>!~&|,?:").find(this->curr_char) != std::string::npos) tokens.push_back(this->buildOperator());
                 else{ std::cerr<<"Illegal character "<<this->curr_char<<"."; exit(EXIT_FAILURE); }
             } tokens.push_back(Token(TokenList::T_EOF, ""));
             return tokens;

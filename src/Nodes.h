@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <vector>
+#include <sstream>
 #include "Token.h"
 #include "Values.h"
 
@@ -131,34 +133,42 @@ std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
 	return stream << "("<<that.operator_<<", "<<that.right<<")";
 }
 
-class VariableNode : public Expression {
+class ContainerAccessNode : public Expression {
 	public:
-	Token token;
-	VariableNode(Token rvalue) : token(rvalue){}
+	std::string var;
+	std::vector<Expression*> path;
+	ContainerAccessNode(std::string var, std::vector<Expression*> path) : var(var), path(path){}
 	Value* eval(){
-		return Variables::get(this->token.value);
+		if(this->path.empty()) return Variables::get(this->var);
+		else return static_cast<ArrayValue*>(this->getContainer())->get(this->getKey());
+	}
+	Value* getContainer(){
+		Value* cont = Variables::get(this->var);
+		for(int i = 0; i < this->path.size()-1; i++){
+			if(cont->getType() != TokenList::ARRAY){
+				std::cerr<<cont->asString()<<" is not an array value.";
+				std::exit(EXIT_FAILURE);
+			} cont = static_cast<ArrayValue*>(cont)->get(this->path.at(i)->eval()->asString());
+		} return cont;
+	} std::string getKey(){
+		return this->path.back()->eval()->asString();
 	}
 };
-std::ostream& operator<<(std::ostream& stream, const VariableNode& that){
-    return stream << that.token;
+std::ostream& operator<<(std::ostream& stream, const ContainerAccessNode& that){
+    std::ostringstream oss1; std::copy(that.path.begin(), that.path.end(), std::ostream_iterator<Expression*>(oss1, "]["));
+    return stream << that.var<<"["<<oss1.str()<<"]";
 }
 
 class ValueNode : public Expression {
 	public:
-	Token token;
-	ValueNode(Token rvalue) : token(rvalue){}
+	Value* value;
+	ValueNode(Value* rvalue) : value(rvalue){}
 	Value* eval(){
-		switch(this->token.type){
-			case TokenList::DOUBLE: return new DoubleValue(std::stod(this->token.value));
-			case TokenList::INT: return new IntegerValue(std::stoi(this->token.value));
-			case TokenList::BOOL: return new BooleanValue(this->token.value=="1"||this->token.value=="true"?true:false);
-			case TokenList::STRING: return new StringValue(this->token.value);
-			default: std::cerr<<"Impossible value type "<<this->token.type<<"."; std::exit(EXIT_FAILURE);
-		}
+		return this->value;
 	}
 };
 std::ostream& operator<<(std::ostream& stream, const ValueNode& that){
-	return stream << that.token;
+	return stream << that.value;
 }
 
 #endif

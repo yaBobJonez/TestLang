@@ -18,15 +18,22 @@ class Parser {
         	Statement* res;
         	if(matches(TokenList::OUTPUT)) res = new OutputStatement(this->expression());
         	else if(matches(TokenList::IF)) res = this->ifState();
+        	else if(matches(TokenList::SWITCH)) res = this->switchState();
+        	else if(matches(TokenList::CONTINUE)) res = new ContinueStatement();
         	else res = this->assignmentState();
         	this->matches(TokenList::SEMICOLON);
         	return res;
         }
         Statement* assignmentState(){
         	Token curr = this->getToken(0);
-        	if(matches(TokenList::ID) && matches(TokenList::ASSIGN))
-        		return new AssignmentStatement(curr.value, this->expression());
-        	std::cerr<<"Unsupported statement."; exit(EXIT_FAILURE);
+        	if(matches(TokenList::ID)){
+        		std::vector<Expression*> indices;
+        		while(matches(TokenList::LBRACK)){
+        			indices.push_back(this->expression());
+        			consume(TokenList::RBRACK);
+        		} if(matches(TokenList::ASSIGN))
+        			return new AssignmentStatement(new ContainerAccessNode(curr.value, indices), this->expression());
+        	} std::cerr<<"Unsupported statement: "<<curr; exit(EXIT_FAILURE);
         }
         Statement* ifState(){
         	this->consume(TokenList::LPAR);
@@ -41,6 +48,29 @@ class Parser {
         			while(!matches(TokenList::RBRACE)) otherwise.push_back(this->statement());
         		else otherwise.push_back(this->statement());
         	return new ConditionalStatement(condition, then, otherwise);
+        }
+        Statement* switchState(){
+        	consume(TokenList::LPAR);
+        	Expression* condition = this->expression();
+        	consume(TokenList::RPAR);
+        	std::map<std::vector<Expression*>, std::vector<Statement*>> cases;
+        	std::vector<Statement*> defcase;
+        	consume(TokenList::LBRACE);
+        	while(matches(TokenList::CASE)){
+        		std::vector<Expression*> matchs; do{
+        			matchs.push_back(this->expression());
+        			matches(TokenList::COMMA);
+        		} while(!matches(TokenList::COLON));
+        		std::vector<Statement*> statements;
+        		TokenList t; do{ statements.push_back(this->statement());
+        		t = this->getToken(0).type; } while(!(t == TokenList::CASE || t == TokenList::DEFAULT || t == TokenList::RBRACE));
+        		cases[matchs] = statements;
+        	} if(matches(TokenList::DEFAULT)){
+        		consume(TokenList::COLON);
+        		do{ defcase.push_back(this->statement()); }
+        		while(this->getToken(0).type != TokenList::RBRACE);
+        	} consume(TokenList::RBRACE);
+        	return new SwitchStatement(condition, cases, defcase);
         }
         Expression* expression(){
         	return this->ternary();
@@ -179,15 +209,37 @@ class Parser {
         Expression* factor(){
             Token curr = this->getToken(0);
             if(matches(TokenList::INT)){
-                return new ValueNode(curr);
+                return new ValueNode(new IntegerValue(std::stoi(curr.value)));
             } else if(matches(TokenList::DOUBLE)){
-                return new ValueNode(curr);
+                return new ValueNode(new DoubleValue(std::stod(curr.value)));
             } else if(matches(TokenList::STRING)){
-            	return new ValueNode(curr);
+            	return new ValueNode(new StringValue(curr.value));
             } else if(matches(TokenList::BOOL)){
-            	return new ValueNode(curr);
+            	return new ValueNode(new BooleanValue(curr.value=="1"?true:false));
             } else if(matches(TokenList::ID)){
-            	return new VariableNode(curr);
+            	std::vector<Expression*> indices;
+            	while(matches(TokenList::LBRACK)){
+            		indices.push_back(this->expression());
+            		consume(TokenList::RBRACK);
+            	} return new ContainerAccessNode(curr.value, indices);
+        	} else if(matches(TokenList::LBRACK)){
+            	std::vector<Expression*>* temp = new std::vector<Expression*>();
+            	std::map<std::string, Value*> arr; int count = 0;
+            	while(!matches(TokenList::RBRACK)){
+            		Expression* first = this->expression();
+            		if(!matches(TokenList::COLON)){
+            			temp->push_back(first);
+            			matches(TokenList::COMMA); //TODO not last
+            			continue;
+            		} arr[first->eval()->asString()] = this->expression()->eval();
+            		matches(TokenList::COMMA);
+            	} for(Expression* el : *temp){
+            		IntegerValue* c = new IntegerValue(count);
+            		while(arr.find(c->asString()) != arr.end())
+            			{ delete c; c = new IntegerValue(++count); }
+            		arr[c->asString()] = el->eval();
+            	} delete temp;
+            	return new ValueNode(new ArrayValue(arr));
             } else if(matches(TokenList::LPAR)){
             	Expression* expr = this->expression();
             	this->consume(TokenList::RPAR);

@@ -5,14 +5,18 @@
 
 enum TokenList {
     SEMICOLON,
+    COMMA,
     ID,
     OUTPUT,
     INT,
     DOUBLE,
     BOOL,
     STRING,
+    ARRAY,
     LPAR,
     RPAR,
+    LBRACK,
+    RBRACK,
     LBRACE,
     RBRACE,
     ASSIGN,
@@ -42,6 +46,10 @@ enum TokenList {
     BRSH,
     IF,
     ELSE,
+    SWITCH,
+    CASE,
+    DEFAULT,
+    CONTINUE,
     T_EOF
 };
 

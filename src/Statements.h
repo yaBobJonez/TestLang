@@ -2,9 +2,7 @@
 #define AC_AST_STATEMENTS
 
 #include <vector>
-#include <algorithm>
 #include <sstream>
-#include <iterator>
 #include "Nodes.h"
 #include "Values.h"
 
@@ -27,15 +25,17 @@ std::ostream& operator<<(std::ostream& stream, const OutputStatement& that){
 
 class AssignmentStatement : public Statement {
 	public:
-	std::string variable;
+	ContainerAccessNode* container;
 	Expression* expression;
-	AssignmentStatement(std::string var, Expression* expr) : variable(var), expression(expr){}
+	AssignmentStatement(ContainerAccessNode* cont, Expression* expr) : container(cont), expression(expr){}
 	void execute(){
-		Variables::set(this->variable, this->expression->eval());
+		if(this->container->path.empty()) return Variables::set(this->container->var, this->expression->eval());
+		else static_cast<ArrayValue*>(this->container->getContainer())->set(this->container->getKey(), this->expression->eval());
 	}
 };
 std::ostream& operator<<(std::ostream& stream, const AssignmentStatement& that){
-	return stream << "Assign{"<<that.variable<<" = "<<that.expression<<"}";
+	std::ostringstream oss1; std::copy(that.container->path.begin(), that.container->path.end(), std::ostream_iterator<Expression*>(oss1, "]["));
+	return stream << "Assign{"<<that.container->var<<"["<<oss1.str()<<"] = "<<that.expression<<"}";
 }
 
 class ConditionalStatement : public Statement {
@@ -56,5 +56,36 @@ std::ostream& operator<<(std::ostream& stream, const ConditionalStatement& that)
 	std::ostringstream oss2; std::copy(that.elsestate.begin(), that.elsestate.end(), std::ostream_iterator<Statement*>(oss2, ", "));
 	return stream << "IfElse{cond = "<<that.condition<<"; if = ["<<oss1.str()<<"]; else = ["<<oss2.str()<<"]}";
 }
+
+class ContinueStatement : public Statement {
+	public:
+	ContinueStatement(){}
+	void execute(){ throw this; }
+};
+
+class SwitchStatement : public Statement {
+	public:
+	Expression* condition;
+	std::map<std::vector<Expression*>, std::vector<Statement*>> cases;
+	std::vector<Statement*> defcase;
+	SwitchStatement(
+		Expression* cond,
+		std::map<std::vector<Expression*>, std::vector<Statement*>> cases,
+		std::vector<Statement*> def
+	) : condition(cond), cases(cases), defcase(def){}
+	void execute(){
+		Value* cond = this->condition->eval();
+		bool matched = false;
+		for(auto& c : this->cases){
+			if(!matched){
+				for(Expression* pattern : c.first)
+					if(cond->equals(pattern->eval())){ matched = true; break; }
+				if(!matched) continue;
+			} try{ for(Statement* st : c.second) st->execute(); }
+			catch(ContinueStatement* e){ continue; }
+			return;
+		} for(Statement* st : this->defcase) st->execute();
+	}
+};
 
 #endif
