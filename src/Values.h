@@ -35,7 +35,7 @@ class ArrayValue : public Value {
 	std::string asString(){
 		std::string s = "["; if(this->container.empty()) return s+"]";
 		for(std::pair<std::string, Value*> el : this->container)
-			s += el.first+" : "+el.second->asString()+", ";
+			s += el.first+":"+el.second->asString()+", ";
 		s.erase(s.length()-2); return s+"]";
 	} int asInteger(){
 		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" to integer.";
@@ -60,12 +60,8 @@ class ArrayValue : public Value {
 				if(!v1.at(e2.first)->equals(e2.second)) return false;
 			} return true;
 		} else if(this->container.size() == 1)
-			for(auto& el : this->container)
-			if(el.second->getType()==TokenList::STRING || t==TokenList::STRING)
-				return el.second->asString() == other->asString();
-			else if(t==TokenList::BOOL)
-				return el.second->asBoolean() == other->asBoolean();
-			else return el.second->asDouble() == other->asDouble();
+			for(auto& el : this->container) return el.second->equals(other);
+		else if(t == TokenList::BOOL) return other->equals(this);
 		else return false;
 	}
 };
@@ -88,17 +84,16 @@ class StringValue : public Value {
 			std::cerr<<"Cannot cast string \""<<this->value<<"\" to double.";
 			std::exit(EXIT_FAILURE); }
 	} bool asBoolean(){
-		return this->value != "";
+		return this->value != "" && this->value != "0";
 	}
 	bool equals(Value* other){
 		TokenList t = other->getType();
-		if(t==TokenList::STRING) return this->value == other->asString(); //TODO 'f' == 1 not an error, just false
-		else if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
-		else if(t==TokenList::ARRAY){
-			auto o = static_cast<ArrayValue*>(other)->container;
-			if(o.size() == 1) for(auto& el : o) return el.second->asString() == this->value;
-			return false;
-		} else return this->asDouble() == other->asDouble();
+		if(t==TokenList::STRING) return this->value == other->asString();
+		else if(t==TokenList::INT || t==TokenList::DOUBLE){
+			if(this->value=="") return 0.0 == other->asDouble();
+			char* e = NULL; double v = std::strtod(this->value.c_str(), &e);
+			if(*e) return false; else return v == other->asDouble();
+		} else return other->equals(this);
 	}
 };
 class IntegerValue : public Value {
@@ -118,12 +113,8 @@ class IntegerValue : public Value {
 	}
 	bool equals(Value* other){
 		TokenList t = other->getType();
-		if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
-		else if(t==TokenList::ARRAY){
-			auto o = static_cast<ArrayValue*>(other)->container;
-			if(o.size() == 1) for(auto& el : o) return el.second->asDouble() == this->value;
-			return false;
-		} else return this->value == other->asDouble();
+		if(t==TokenList::INT) return this->value == other->asInteger();
+		else return other->equals(this);
 	}
 };
 class DoubleValue : public Value {
@@ -135,7 +126,7 @@ class DoubleValue : public Value {
 	std::string asString(){
 		return std::to_string(this->value);
 	} int asInteger(){
-		return (int)this->value==this->value? (int)this->value : std::round(this->value);
+		return (int)std::round(this->value);
 	} double asDouble(){
 		return this->value;
 	} bool asBoolean(){
@@ -143,12 +134,8 @@ class DoubleValue : public Value {
 	}
 	bool equals(Value* other){
 		TokenList t = other->getType();
-		if(t==TokenList::BOOL) return this->asBoolean() == other->asBoolean();
-		else if(t==TokenList::ARRAY){
-			auto o = static_cast<ArrayValue*>(other)->container;
-			if(o.size() == 1) for(auto& el : o) return el.second->asDouble() == this->value;
-			return false;
-		} else return this->value == other->asDouble();
+		if(t==TokenList::INT || t==TokenList::DOUBLE) return this->value == other->asDouble();
+		else return other->equals(this);
 	}
 };
 class BooleanValue : public Value {
@@ -167,7 +154,26 @@ class BooleanValue : public Value {
 		return this->value;
 	}
 	bool equals(Value* other){
-		return this->asBoolean() == other->asBoolean();
+		return this->value == other->asBoolean();
+	}
+};
+class NullValue : public Value {
+	public:
+	TokenList getType(){ return TokenList::NUL; }
+	NullValue(){}
+	std::string asString(){
+		return "null";
+	} int asInteger(){
+		std::cerr<<"Cannot cast null to integer.";
+		std::exit(EXIT_FAILURE);
+	} double asDouble(){
+		std::cerr<<"Cannot cast null to double.";
+		std::exit(EXIT_FAILURE);
+	} bool asBoolean(){
+		return false;
+	}
+	bool equals(Value* other){
+		return other->getType() == TokenList::NUL;
 	}
 };
 

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <vector>
 #include "Token.h"
-#include "Nodes.h"
 #include "Statements.h"
+#include "Nodes.h"
 
 using namespace std;
 
@@ -19,21 +19,19 @@ class Parser {
         	if(matches(TokenList::OUTPUT)) res = new OutputStatement(this->expression());
         	else if(matches(TokenList::IF)) res = this->ifState();
         	else if(matches(TokenList::SWITCH)) res = this->switchState();
+			else if(matches(TokenList::FOR)) res = this->forState();
+			else if(matches(TokenList::FOREACH)) res = this->foreachState();
+			else if(matches(TokenList::WHILE)) res = this->whileState();
+			else if(matches(TokenList::DO)) res = this->doWhileState();
+			else if(matches(TokenList::BREAK)) res = new BreakStatement();
         	else if(matches(TokenList::CONTINUE)) res = new ContinueStatement();
-        	else res = this->assignmentState();
-        	this->matches(TokenList::SEMICOLON);
+			else if(matches(TokenList::SEMICOLON)) return new NullStatement();
+        	else {
+				Statement* exprState = dynamic_cast<Statement*>(this->expression());
+				if(exprState != nullptr) res = exprState;
+				else { std::cerr<<"Unsupported statement: "<<this->getToken(0); exit(EXIT_FAILURE); }
+			} this->matches(TokenList::SEMICOLON);
         	return res;
-        }
-        Statement* assignmentState(){
-        	Token curr = this->getToken(0);
-        	if(matches(TokenList::ID)){
-        		std::vector<Expression*> indices;
-        		while(matches(TokenList::LBRACK)){
-        			indices.push_back(this->expression());
-        			consume(TokenList::RBRACK);
-        		} if(matches(TokenList::ASSIGN))
-        			return new AssignmentStatement(new ContainerAccessNode(curr.value, indices), this->expression());
-        	} std::cerr<<"Unsupported statement: "<<curr; exit(EXIT_FAILURE);
         }
         Statement* ifState(){
         	this->consume(TokenList::LPAR);
@@ -72,9 +70,82 @@ class Parser {
         	} consume(TokenList::RBRACE);
         	return new SwitchStatement(condition, cases, defcase);
         }
+		Statement* forState(){
+			consume(TokenList::LPAR);
+			Statement* init = this->statement();
+			Expression* cond;
+			if(getToken(0).type == TokenList::SEMICOLON) cond = new ValueNode(new BooleanValue(true));
+			else cond = this->expression();
+			consume(TokenList::SEMICOLON);
+			Statement* incr;
+			if(getToken(0).type == TokenList::RPAR) incr = new NullStatement();
+			else incr = this->statement();
+			consume(TokenList::RPAR);
+			std::vector<Statement*> states;
+			if(matches(TokenList::LBRACE))
+        		while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+        	else states.push_back(this->statement());
+			return new ForStatement(init, cond, incr, states);
+		}
+		Statement* foreachState(){
+			consume(TokenList::LPAR);
+			ContainerAccessNode* first = static_cast<ContainerAccessNode*>(this->qualifiedName());
+			ContainerAccessNode* second = NULL;
+			if(matches(TokenList::COLON)) second = static_cast<ContainerAccessNode*>(this->qualifiedName());
+			consume(TokenList::IN);
+			Expression* cont = this->expression();
+			consume(TokenList::RPAR);
+			std::vector<Statement*> states;
+			if(matches(TokenList::LBRACE))
+        		while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+        	else states.push_back(this->statement());
+			if(second == NULL) return new ForeachStatement(first, cont, states);
+			else return new ForeachStatement(first, second, cont, states);
+		}
+		Statement* whileState(){
+			consume(TokenList::LPAR);
+			Expression* cond = this->expression();
+			consume(TokenList::RPAR);
+			std::vector<Statement*> states;
+			if(matches(TokenList::LBRACE))
+        		while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+        	else states.push_back(this->statement());
+			return new WhileStatement(cond, states);
+		}
+		Statement* doWhileState(){
+			std::vector<Statement*> states;
+			if(matches(TokenList::LBRACE))
+        		while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+        	else states.push_back(this->statement());
+			consume(TokenList::WHILE);
+			consume(TokenList::LPAR);
+			Expression* cond = this->expression();
+			consume(TokenList::RPAR);
+			return new DoWhileStatement(states, cond);
+		}
         Expression* expression(){
-        	return this->ternary();
+        	return this->assignment();
         }
+		Expression* assignment(){
+			int pos = this->position;
+			Expression* result = this->qualifiedName();
+			if(result != NULL){
+				ContainerAccessNode* cont = static_cast<ContainerAccessNode*>(result);
+				if(matches(TokenList::ASSIGN)) return new AssignmentNode(cont, this->expression());
+				else if(matches(TokenList::ASGNCONCAT)) return new AssignmentNode(cont, "><", this->expression());
+				else if(matches(TokenList::ASGNADD)) return new AssignmentNode(cont, "+", this->expression());
+				else if(matches(TokenList::ASGNSUBTRACT)) return new AssignmentNode(cont, "-", this->expression());
+				else if(matches(TokenList::ASGNMULTIPLY)) return new AssignmentNode(cont, "*", this->expression());
+				else if(matches(TokenList::ASGNDIVIDE)) return new AssignmentNode(cont, "/", this->expression());
+				else if(matches(TokenList::ASGNMODULO)) return new AssignmentNode(cont, "%", this->expression());
+				else if(matches(TokenList::ASGNPOWER)) return new AssignmentNode(cont, "^", this->expression());
+				else if(matches(TokenList::ASGNBAND)) return new AssignmentNode(cont, "&", this->expression());
+				else if(matches(TokenList::ASGNBOR)) return new AssignmentNode(cont, "|", this->expression());
+				else if(matches(TokenList::ASGNBLSH)) return new AssignmentNode(cont, "<<", this->expression());
+				else if(matches(TokenList::ASGNBRSH)) return new AssignmentNode(cont, ">>", this->expression());
+			} this->position = pos;
+			return this->ternary();
+		}
         Expression* ternary(){
         	Expression* result = this->lgdisjunct();
         	while(true){
@@ -122,6 +193,8 @@ class Parser {
         			result = new BinaryNode(result, ">", this->bitdisjunct()); continue;
         		} else if(matches(TokenList::GTOREQ)){
         			result = new BinaryNode(result, ">=", this->bitdisjunct()); continue;
+        		} else if(matches(TokenList::IN)){
+        			result = new BinaryNode(result, "in", this->bitdisjunct()); continue;
         		} break;
         	} return result;
         }
@@ -150,10 +223,18 @@ class Parser {
         	} return result;
         }
         Expression* concatenation(){
-        	Expression* result = this->shifting();
+        	Expression* result = this->ranging();
         	while(true){
         		if(matches(TokenList::CONCAT)){
-        			result = new BinaryNode(result, "<>", this->shifting()); continue;
+        			result = new BinaryNode(result, "<>", this->ranging()); continue;
+        		} break;
+        	} return result;
+        }
+        Expression* ranging(){
+        	Expression* result = this->shifting();
+        	while(true){
+        		if(matches(TokenList::RANGE)){
+        			result = new BinaryNode(result, "..", this->shifting()); continue;
         		} break;
         	} return result;
         }
@@ -178,36 +259,55 @@ class Parser {
             } return result;
         }
         Expression* multiplication(){
-            Expression* result = this->exponentiation();
+            Expression* result = this->unary();
             while(true){
                 if(matches(TokenList::MULTIPLY)){
-                    result = new BinaryNode(result, "*", this->exponentiation()); continue;
+                    result = new BinaryNode(result, "*", this->unary()); continue;
                 } else if(matches(TokenList::DIVIDE)){
-                    result = new BinaryNode(result, "/", this->exponentiation()); continue;
-                } break;
-            } return result;
-        }
-        Expression* exponentiation(){
-        	Expression* result = this->unary();
-        	while(true){
-        		if(matches(TokenList::POWER)){
-        			result = new BinaryNode(result, "^", this->unary()); continue;
+                    result = new BinaryNode(result, "/", this->unary()); continue;
                 } else if(matches(TokenList::MODULO)){
                     result = new BinaryNode(result, "%", this->unary()); continue;
                 } break;
-        	} return result;
+            } return result;
         }
         Expression* unary(){
             if(matches(TokenList::SUBTRACT)){
-                return new UnaryNode('-', this->factor());
+                return new UnaryNode("-", this->exponentiation());
             } else if(matches(TokenList::LNOT)){
-            	return new UnaryNode('!', this->factor());
-            } else if(matches(TokenList::BNOT)){
-            	return new UnaryNode('~', this->factor());
-            } return this->factor();
+            	return new UnaryNode("!", this->exponentiation());
+            } else if(matches(TokenList::INCR)){
+				return new UnaryNode("+_", this->exponentiation());
+			} else if(matches(TokenList::DECR)){
+				return new UnaryNode("-_", this->exponentiation());
+			} else if(matches(TokenList::BNOT)){
+            	return new UnaryNode("~", this->exponentiation());
+            } return this->exponentiation();
         }
+        Expression* exponentiation(){
+        	Expression* result = this->factor();
+        	while(true){
+        		if(matches(TokenList::POWER)){
+        			result = new BinaryNode(result, "^", this->factor()); continue;
+                } break;
+        	} return result;
+        }
+		Expression* qualifiedName(){
+			Token curr = this->getToken(0);
+			if(matches(TokenList::ID)){
+            	std::vector<Expression*> indices;
+            	while(matches(TokenList::LBRACK)){
+            		indices.push_back(this->expression());
+            		consume(TokenList::RBRACK);
+            	} return new ContainerAccessNode(curr.value, indices);
+        	} return NULL;
+		}
         Expression* factor(){
-            Token curr = this->getToken(0);
+            Expression* fqn = qualifiedName();
+			if(fqn != NULL){
+				if(matches(TokenList::INCR)) return new UnaryNode("_+", fqn);
+				else if(matches(TokenList::DECR)) return new UnaryNode("_-", fqn);
+				else return fqn;
+			} Token curr = this->getToken(0);
             if(matches(TokenList::INT)){
                 return new ValueNode(new IntegerValue(std::stoi(curr.value)));
             } else if(matches(TokenList::DOUBLE)){
@@ -216,20 +316,16 @@ class Parser {
             	return new ValueNode(new StringValue(curr.value));
             } else if(matches(TokenList::BOOL)){
             	return new ValueNode(new BooleanValue(curr.value=="1"?true:false));
-            } else if(matches(TokenList::ID)){
-            	std::vector<Expression*> indices;
-            	while(matches(TokenList::LBRACK)){
-            		indices.push_back(this->expression());
-            		consume(TokenList::RBRACK);
-            	} return new ContainerAccessNode(curr.value, indices);
-        	} else if(matches(TokenList::LBRACK)){
+            } else if(matches(TokenList::NUL)){
+            	return new ValueNode(new NullValue());
+            } else if(matches(TokenList::LBRACK)){
             	std::vector<Expression*>* temp = new std::vector<Expression*>();
             	std::map<std::string, Value*> arr; int count = 0;
             	while(!matches(TokenList::RBRACK)){
             		Expression* first = this->expression();
             		if(!matches(TokenList::COLON)){
             			temp->push_back(first);
-            			matches(TokenList::COMMA); //TODO not last
+            			matches(TokenList::COMMA);
             			continue;
             		} arr[first->eval()->asString()] = this->expression()->eval();
             		matches(TokenList::COMMA);

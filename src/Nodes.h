@@ -3,8 +3,11 @@
 
 #include <iostream>
 #include <cmath>
+#include <string>
 #include <vector>
+#include <map>
 #include <sstream>
+#include <iterator>
 #include "Token.h"
 #include "Values.h"
 
@@ -53,6 +56,8 @@ class BinaryNode : public Expression {
             else if(o== ">=") return this->gtOrEq(left, right);
             else if(o== "&&") return this->lAnd(left, right);
             else if(o== "||") return this->lOr(left, right);
+            else if(o== "in") return this->contains(left, right);
+            else if(o== "..") return this->range(left, right);
             else if(o== "&") return this->bAnd(left, right);
             else if(o== "|") return this->bOr(left, right);
             else if(o== "~=") return this->bXor(left, right);
@@ -91,7 +96,39 @@ class BinaryNode : public Expression {
     		return left->asBoolean()? right : left;
     	} Value* lOr(Value* left, Value* right){
     		return left->asBoolean()? left : right;
-    	} Value* bAnd(Value* left, Value* right){
+    	} Value* contains(Value* left, Value* right){
+    		TokenList t = right->getType();
+    		if(t == TokenList::ARRAY){
+    			std::map<std::string, Value*> r = static_cast<ArrayValue*>(right)->container;
+    			for(std::pair<std::string, Value*> el : r){
+    				if(el.first.find_first_not_of("0123456789")==std::string::npos){
+    					if(el.second->asString() == left->asString()) return new BooleanValue(true);
+    				} else{
+    					if(el.first == left->asString()) return new BooleanValue(true);
+    				}
+    			} return new BooleanValue(false);
+    		} else if(t == TokenList::STRING){
+    			std::string r = right->asString();
+    			if(r.find(left->asString()) != std::string::npos) return new BooleanValue(true);
+    			else return new BooleanValue(false);
+    		} std::cerr<<"Value "<<right->asString()<<" is not a container.";
+    		std::exit(EXIT_FAILURE);
+    	} Value* range(Value* left, Value* right){
+    		std::map<std::string, Value*> arr;
+    		TokenList t = left->getType();
+    		if(t != right->getType()){ std::cerr<<"Types of range values don't match."; std::exit(EXIT_FAILURE); }
+    		if(t == TokenList::INT){
+    			int l = left->asInteger(), r = right->asInteger();
+    			if(l<r) for(int i = 0; i <= r-l; i++) arr[std::to_string(i)] = new IntegerValue(l+i);
+    			else for(int i = 0; i <= l-r; i++) arr[std::to_string(i)] = new IntegerValue(l-i);
+    		} else if(t == TokenList::STRING){
+    			std::string ll = left->asString(), rr = right->asString();
+    			if(ll.length() != 1 || rr.length() != 1){ std::cerr<<"Invalid range values specified."; std::exit(EXIT_FAILURE); }
+    			char l = ll.at(0), r = rr.at(0);
+    			if(l<r) for(int i = 0; i <= r-l; i++) arr[std::to_string(i)] = new StringValue(std::string(1, l+i));
+    			else for(int i = 0; i <= l-r; i++) arr[std::to_string(i)] = new StringValue(std::string(1, l-i));
+    		} return new ArrayValue(arr);
+		} Value* bAnd(Value* left, Value* right){
     		return new IntegerValue(left->asInteger() & right->asInteger());
     	} Value* bOr(Value* left, Value* right){
     		return new IntegerValue(left->asInteger() | right->asInteger());
@@ -105,32 +142,6 @@ class BinaryNode : public Expression {
 };
 std::ostream& operator<<(std::ostream& stream, const BinaryNode& that){
 	return stream << "("<<that.left<<", "<<that.operator_<<", "<<that.right<<")";
-}
-
-class UnaryNode : public Expression {
-    public:
-        char operator_;
-        Expression* right;
-        UnaryNode(char operator_, Expression* right) : operator_(operator_), right(right){}
-        Value* eval(){
-            Value* right = (*this->right).eval();
-            char o = this->operator_;
-            if(o== '-') return this->negate(right);
-            else if(o== '!') return this->lNot(right);
-            else if(o== '~') return this->bNot(right);
-            std::cerr<<"Unknown operator "<<this->operator_<<"."; exit(EXIT_FAILURE);
-        }
-    private:
-    	Value* negate(Value* right){
-    		return new DoubleValue(- right->asDouble());
-    	} Value* lNot(Value* right){
-    		return new BooleanValue(! right->asBoolean());
-    	} Value* bNot(Value* right){
-    		return new IntegerValue(~ right->asInteger());
-    	}
-};
-std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
-	return stream << "("<<that.operator_<<", "<<that.right<<")";
 }
 
 class ContainerAccessNode : public Expression {
@@ -159,6 +170,29 @@ std::ostream& operator<<(std::ostream& stream, const ContainerAccessNode& that){
     return stream << that.var<<"["<<oss1.str()<<"]";
 }
 
+class AssignmentNode : public Expression, public Statement {
+	public:
+	ContainerAccessNode* left;
+	std::string op;
+	Expression* right;
+	AssignmentNode(ContainerAccessNode* left, std::string op, Expression* right) : left(left), op(op), right(right){}
+	AssignmentNode(ContainerAccessNode* left, Expression* right) : left(left), op(""), right(right){}
+	Value* eval(){
+		if(op== "") this->left->path.empty()?
+			Variables::set(this->left->var, this->right->eval())
+			: static_cast<ArrayValue*>(this->left->getContainer())->set(this->left->getKey(), this->right->eval());
+		else this->left->path.empty()?
+			Variables::set(this->left->var, BinaryNode(this->left, this->op, this->right).eval())
+			: static_cast<ArrayValue*>(this->left->getContainer())->set(this->left->getKey(), BinaryNode(this->left, this->op, this->right).eval());
+		return this->left->eval();
+	}
+	void execute(){ this->eval(); }
+};
+std::ostream& operator<<(std::ostream& stream, const AssignmentNode& that){
+	std::ostringstream oss1; std::copy(that.left->path.begin(), that.left->path.end(), std::ostream_iterator<Expression*>(oss1, "]["));
+	return stream << "Assign{cont = "<<that.left->var<<"["<<oss1.str()<<"]; op = '"<<that.op<<"'; expr = "<<that.right<<"}";
+}
+
 class ValueNode : public Expression {
 	public:
 	Value* value;
@@ -169,6 +203,41 @@ class ValueNode : public Expression {
 };
 std::ostream& operator<<(std::ostream& stream, const ValueNode& that){
 	return stream << that.value;
+}
+
+class UnaryNode : public Expression {
+    public:
+        std::string op;
+        Expression* right;
+        UnaryNode(std::string op, Expression* right) : op(op), right(right){}
+        Value* eval(){
+            Value* r = this->right->eval();
+            if(op== "-") return this->negate(r);
+            else if(op== "!") return this->lNot(r);
+            else if(op== "~") return this->bNot(r);
+			ContainerAccessNode* l = dynamic_cast<ContainerAccessNode*>(this->right);
+			if(l == nullptr){ std::cerr<<"Unary in/decrement expected a container."; exit(EXIT_FAILURE); }
+			else if(op== "+_") return incr(l);
+			else if(op== "-_") return decr(l);
+			else if(op== "_+"){ incr(l); return r; }
+			else if(op== "_-"){ decr(l); return r; }
+            std::cerr<<"Unknown operator "<<this->op<<"."; exit(EXIT_FAILURE);
+        }
+    private:
+    	Value* negate(Value* right){
+    		return new DoubleValue(- right->asDouble());
+    	} Value* lNot(Value* right){
+    		return new BooleanValue(! right->asBoolean());
+    	} Value* bNot(Value* right){
+    		return new IntegerValue(~ right->asInteger());
+    	} Value* incr(ContainerAccessNode* left){
+			return AssignmentNode(left, "+", new ValueNode(new DoubleValue(1))).eval();
+		} Value* decr(ContainerAccessNode* left){
+			return AssignmentNode(left, "-", new ValueNode(new DoubleValue(1))).eval();
+		}
+};
+std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
+	return stream << "("<<that.op<<", "<<that.right<<")";
 }
 
 #endif
