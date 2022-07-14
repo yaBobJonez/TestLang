@@ -6,24 +6,12 @@
 #include <iterator>
 #include "Values.h"
 
-class Statement {
+/*class Statement {
 	public:
 	virtual void execute() = 0;
-};
+};*/
 
 #include "Nodes.h"
-
-class OutputStatement : public Statement {
-	public:
-		Expression* expression;
-		OutputStatement(Expression* expression) : expression(expression){}
-		void execute(){
-			std::cout << expression->eval()->asString() << std::endl;
-		}
-};
-std::ostream& operator<<(std::ostream& stream, const OutputStatement& that){
-    return stream << "Output{" << that.expression << "}";
-}
 
 class ConditionalStatement : public Statement {
 	public:

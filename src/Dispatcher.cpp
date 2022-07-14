@@ -1,11 +1,14 @@
 #include <iostream>
 #include "Lexer.h"
 #include "Parser.h"
+#include "Presets.h"
 
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
+    Variables::push();
+    init();
     while(true){
         cout << "> ";
         string input;

@@ -11,10 +11,10 @@
 #include "Token.h"
 #include "Values.h"
 
-class Expression {
+/*class Expression {
     public:
     virtual Value* eval() = 0;
-};
+};*/
 
 class TernaryNode : public Expression {
 	public:
@@ -238,6 +238,23 @@ class UnaryNode : public Expression {
 };
 std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
 	return stream << "("<<that.op<<", "<<that.right<<")";
+}
+
+class FunctionNode : public Expression, public Statement {
+	public:
+		Expression* func;
+		std::vector<Expression*> args;
+		FunctionNode(Expression* func, std::vector<Expression*> args) : func(func), args(args){}
+		Value* eval(){
+			Value* func = this->func->eval();
+			if(func->getType() != TokenList::FUNCTION){ std::cerr<<"Cannot call a non-function value."; std::exit(EXIT_FAILURE); }
+			return static_cast<FunctionValue*>(func)->execute(this->args);
+		}
+		void execute(){ this->eval(); }
+};
+std::ostream& operator<<(std::ostream& stream, const FunctionNode& that){
+	std::ostringstream oss1; std::copy(that.args.begin(), that.args.end(), std::ostream_iterator<Expression*>(oss1, ", "));
+	return stream << "Call{func = "<<that.func<<"; args = "<<oss1.str()<<"}";
 }
 
 #endif

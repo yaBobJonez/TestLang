@@ -5,6 +5,8 @@
 #include <string>
 #include <cmath>
 #include <map>
+#include <functional>
+#include <stack>
 #include "Token.h"
 
 class Value {
@@ -176,17 +178,90 @@ class NullValue : public Value {
 		return other->getType() == TokenList::NUL;
 	}
 };
-
+class Expression{
+	public: virtual Value* eval() = 0;
+}; //FIXME move
+class Statement{
+	public: virtual void execute() = 0;
+}; //FIXME move
 class Variables {
-	static std::map<std::string, Value*> variables;
+	static std::stack<std::map<std::string, Value*>> variables;
 	public:
 	static Value* get(std::string key){
-		std::map<std::string, Value*>::iterator search = variables.find(key);
-		if(search != variables.end()) return search->second;
-		else{ std::cerr<<"Variable "<<key<<" is not defined."; exit(EXIT_FAILURE); }
+		std::stack<std::map<std::string, Value*>> copy = variables;
+		while(!copy.empty()){
+			std::map<std::string, Value*>::iterator search = copy.top().find(key);
+			if(search != copy.top().end()) return search->second;
+			copy.pop();
+		} std::cerr<<"Variable "<<key<<" is not defined."; exit(EXIT_FAILURE);
 	} static void set(std::string key, Value* value){
-		variables[key] = value;
+		variables.top()[key] = value;
 	}
-}; std::map<std::string, Value*> Variables::variables = {};
+	static void push(){ variables.push({}); }
+	static void pop(){ variables.pop(); }
+}; std::stack<std::map<std::string, Value*>> Variables::variables = {};
+
+class ReturnStatement : public Statement { //FIXME move
+	public:
+	Expression* expr;
+	ReturnStatement(Expression* expr) : expr(expr){}
+	void execute(){ throw this; }
+};
+std::ostream& operator<<(std::ostream& stream, const ReturnStatement& that){ return stream << "Return{"<<that.expr<<"}"; }
+class FunctionValue : public Value {
+	private:
+	std::vector<std::pair<std::string, Expression*>> params;
+	int rqParams = 0;
+	std::string varargs;
+	std::vector<Statement*> body;
+	std::function<void(void)> bodyExecutor = [this]{ for(Statement* st : this->body) st->execute(); };
+	public:
+	TokenList getType(){ return TokenList::FUNCTION; }
+	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::vector<Statement*> body)
+		: params(params), varargs(varargs), body(body){ for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
+	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::function<void()> intl)
+		: params(params), varargs(varargs), bodyExecutor(intl){ for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
+	Value* execute(std::vector<Expression*> args){
+		if(args.size() < this->rqParams){ std::cout<<"Too few arguments provided; required at least "<<this->rqParams<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
+		if(this->varargs == "" && args.size() > this->params.size())
+			{ std::cout<<"Too many arguments provided; expected "<<this->params.size()<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
+		int total = args.size() > this->params.size()? this->params.size() : args.size();
+		try {
+			Variables::push();
+			for(int i = 0; i < total; i++) Variables::set(this->params[i].first, args[i]->eval());
+			for(int i = total; i < this->params.size(); i++) Variables::set(this->params[i].first, this->params[i].second->eval());
+			if(this->varargs != ""){
+				std::map<std::string, Value*> others;
+				for(int i = this->params.size(); i < args.size(); i++) others[IntegerValue(i-this->params.size()).asString()] = args[i]->eval();
+				Variables::set(this->varargs, new ArrayValue(others));
+			} this->bodyExecutor();
+			Variables::pop();
+			return new NullValue();
+		} catch(ReturnStatement* e){
+			Value* ret = e->expr->eval();
+			Variables::pop();
+			return ret;
+		}
+	}
+	std::string asString(){
+		std::string parameters = "";
+		for(std::pair<std::string, Expression*> par : this->params) parameters += par.second!=NULL? par.first+"="+par.second->eval()->asString()+"," : par.first+",";
+		std::ostringstream oss1; std::copy(this->body.begin(), this->body.end(), std::ostream_iterator<Statement*>(oss1, ", "));
+		return "function("+parameters+"){"+oss1.str()+"}";
+	} int asInteger(){
+		std::cerr<<"Cannot cast function to integer.";
+		std::exit(EXIT_FAILURE);
+	} double asDouble(){
+		std::cerr<<"Cannot cast function to double.";
+		std::exit(EXIT_FAILURE);
+	} bool asBoolean(){
+		return true;
+	}
+	bool equals(Value* other){
+		if(other->getType() == TokenList::FUNCTION) return this->asString() == other->asString();
+		else if(other->getType() == TokenList::BOOL) return other->asBoolean();
+		else return false;
+	}
+};
 
 #endif 

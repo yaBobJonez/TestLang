@@ -7,7 +7,6 @@ enum TokenList {
     SEMICOLON,
     COMMA,
     ID,
-    OUTPUT,
     NUL,
     INT,
     DOUBLE,
@@ -44,6 +43,7 @@ enum TokenList {
     QUESTION,
     COLON,
     RANGE,
+    ELLIPSIS,
     IN,
     LESS,
     LTOREQ,
@@ -69,8 +69,10 @@ enum TokenList {
     FOREACH,
     WHILE,
     DO,
+    FUNCTION,
     BREAK,
     CONTINUE,
+    RETURN,
     T_EOF
 };
 

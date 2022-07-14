@@ -13,6 +13,7 @@ class Lexer {
         char curr_char;
         string input;
         int size;
+		std::vector<Token> tokens;
     protected:
         void advance(){
             this->position += 1;
@@ -36,8 +37,7 @@ class Lexer {
         	while(std::string("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789").find(this->curr_char) != std::string::npos){
         		word += this->curr_char;
         		this->advance();
-        	} if(word == "print") return Token(TokenList::OUTPUT, "");
-        	else if(word == "true") return Token(TokenList::BOOL, "1");
+        	} if(word == "true") return Token(TokenList::BOOL, "1");
         	else if(word == "false") return Token(TokenList::BOOL, "0");
 			else if(word == "null") return Token(TokenList::NUL, "");
         	else if(word == "if") return Token(TokenList::IF, "");
@@ -49,8 +49,10 @@ class Lexer {
         	else if(word == "switch") return Token(TokenList::SWITCH, "");
         	else if(word == "case") return Token(TokenList::CASE, "");
         	else if(word == "default") return Token(TokenList::DEFAULT, "");
+			else if(word == "function") return Token(TokenList::FUNCTION, "");
 			else if(word == "break") return Token(TokenList::BREAK, "");
         	else if(word == "continue") return Token(TokenList::CONTINUE, "");
+			else if(word == "return") return Token(TokenList::RETURN, "");
         	else if(word == "in") return Token(TokenList::IN, "");
         	else return Token(TokenList::ID, word);
         }
@@ -107,6 +109,7 @@ class Lexer {
         	else if(op == ">=") return Token(TokenList::GTOREQ, "");
         	else if(op == "&&") return Token(TokenList::LAND, "");
         	else if(op == "||") return Token(TokenList::LOR, "");
+			else if(op == "...") return Token(TokenList::ELLIPSIS, "");
         	else if(op == "..") return Token(TokenList::RANGE, "");
         	else if(op == "?") return Token(TokenList::QUESTION, "");
         	else if(op == ":") return Token(TokenList::COLON, "");
@@ -126,7 +129,6 @@ class Lexer {
             this->advance();
         }
         std::vector<Token> tokenize(){
-            std::vector<Token> tokens;
             while(this->curr_char != (char)0){
                 if(this->curr_char == ' ') this->advance();
                 else if(string("0123456789").find(this->curr_char) != string::npos) tokens.push_back(this->buildNumber());

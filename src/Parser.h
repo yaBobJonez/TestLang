@@ -16,15 +16,16 @@ class Parser {
         int size;
         Statement* statement(){
         	Statement* res;
-        	if(matches(TokenList::OUTPUT)) res = new OutputStatement(this->expression());
-        	else if(matches(TokenList::IF)) res = this->ifState();
+        	if(matches(TokenList::IF)) res = this->ifState();
         	else if(matches(TokenList::SWITCH)) res = this->switchState();
 			else if(matches(TokenList::FOR)) res = this->forState();
 			else if(matches(TokenList::FOREACH)) res = this->foreachState();
 			else if(matches(TokenList::WHILE)) res = this->whileState();
 			else if(matches(TokenList::DO)) res = this->doWhileState();
+			else if(matches(TokenList::FUNCTION)) res = this->funcState();
 			else if(matches(TokenList::BREAK)) res = new BreakStatement();
         	else if(matches(TokenList::CONTINUE)) res = new ContinueStatement();
+			else if(matches(TokenList::RETURN)) res = new ReturnStatement(this->expression());
 			else if(matches(TokenList::SEMICOLON)) return new NullStatement();
         	else {
 				Statement* exprState = dynamic_cast<Statement*>(this->expression());
@@ -122,6 +123,30 @@ class Parser {
 			Expression* cond = this->expression();
 			consume(TokenList::RPAR);
 			return new DoWhileStatement(states, cond);
+		}
+		Statement* funcState(){
+			Expression* target = this->qualifiedName();
+			if(target == NULL){ std::cerr<<"Cannot create an unnamed function in a statement."; std::exit(EXIT_FAILURE); }
+			std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> params = this->parameters();
+			std::vector<Statement*> states;
+			if(matches(TokenList::LBRACE))
+				while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+			else states.push_back(this->statement());
+			return new AssignmentNode(static_cast<ContainerAccessNode*>(target), new ValueNode(new FunctionValue(params.second, params.first, states)));
+		}
+		std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> parameters(){
+			consume(TokenList::LPAR);
+			std::vector<std::pair<std::string, Expression*>> params;
+			bool opt = false;
+			std::string variadic = "";
+			while(!matches(TokenList::RPAR)){
+				std::string name = this->consume(TokenList::ID).value;
+				if(matches(TokenList::ASSIGN)){ params.push_back(std::pair<std::string, Expression*>(name, this->expression())); opt = true; }
+				else if(matches(TokenList::ELLIPSIS)){ variadic = name; this->consume(TokenList::RPAR); break; }
+				else if(!opt) params.push_back(std::pair<std::string, Expression*>(name, NULL));
+				else { std::cerr<<"Required parameters cannot be after optional ones."; std::exit(EXIT_FAILURE); }
+				this->matches(TokenList::COMMA);
+			} return std::pair<std::string, std::vector<std::pair<std::string, Expression*>>>(variadic, params);
 		}
         Expression* expression(){
         	return this->assignment();
@@ -306,7 +331,14 @@ class Parser {
 			if(fqn != NULL){
 				if(matches(TokenList::INCR)) return new UnaryNode("_+", fqn);
 				else if(matches(TokenList::DECR)) return new UnaryNode("_-", fqn);
-				else return fqn;
+				else if(this->getToken(0).type == TokenList::LPAR){
+					Expression* func = fqn;
+					while(matches(TokenList::LPAR)){
+						std::vector<Expression*> args;
+						while(!matches(TokenList::RPAR)) args.push_back(this->expression()), this->matches(TokenList::COMMA);
+						func = new FunctionNode(func, args);
+					} return func;
+				} else return fqn;
 			} Token curr = this->getToken(0);
             if(matches(TokenList::INT)){
                 return new ValueNode(new IntegerValue(std::stoi(curr.value)));
@@ -316,7 +348,14 @@ class Parser {
             	return new ValueNode(new StringValue(curr.value));
             } else if(matches(TokenList::BOOL)){
             	return new ValueNode(new BooleanValue(curr.value=="1"?true:false));
-            } else if(matches(TokenList::NUL)){
+            } else if(matches(TokenList::FUNCTION)){
+				std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> params = this->parameters();
+				std::vector<Statement*> states;
+				if(matches(TokenList::LBRACE))
+        			while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+        		else states.push_back(this->statement());
+				return new ValueNode(new FunctionValue(params.second, params.first, states));
+			} else if(matches(TokenList::NUL)){
             	return new ValueNode(new NullValue());
             } else if(matches(TokenList::LBRACK)){
             	std::vector<Expression*>* temp = new std::vector<Expression*>();
