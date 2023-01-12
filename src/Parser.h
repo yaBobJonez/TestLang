@@ -17,7 +17,7 @@ class Parser {
         Statement* statement(){
         	Statement* res;
         	if(matches(TokenList::IF)) res = this->ifState();
-        	else if(matches(TokenList::SWITCH)) res = this->switchState();
+        	//else if(matches(TokenList::SWITCH)) res = this->switchState();
 			else if(matches(TokenList::FOR)) res = this->forState();
 			else if(matches(TokenList::FOREACH)) res = this->foreachState();
 			else if(matches(TokenList::WHILE)) res = this->whileState();
@@ -48,7 +48,7 @@ class Parser {
         		else otherwise.push_back(this->statement());
         	return new ConditionalStatement(condition, then, otherwise);
         }
-        Statement* switchState(){
+        /*Statement* switchState(){
         	consume(TokenList::LPAR);
         	Expression* condition = this->expression();
         	consume(TokenList::RPAR);
@@ -70,7 +70,7 @@ class Parser {
         		while(this->getToken(0).type != TokenList::RBRACE);
         	} consume(TokenList::RBRACE);
         	return new SwitchStatement(condition, cases, defcase);
-        }
+        }*/
 		Statement* forState(){
 			consume(TokenList::LPAR);
 			Statement* init = this->statement();
@@ -358,23 +358,39 @@ class Parser {
 			} else if(matches(TokenList::NUL)){
             	return new ValueNode(new NullValue());
             } else if(matches(TokenList::LBRACK)){
-            	std::vector<Expression*>* temp = new std::vector<Expression*>();
-            	std::map<std::string, Value*> arr; int count = 0;
-            	while(!matches(TokenList::RBRACK)){
-            		Expression* first = this->expression();
-            		if(!matches(TokenList::COLON)){
-            			temp->push_back(first);
-            			matches(TokenList::COMMA);
-            			continue;
-            		} arr[first->eval()->asString()] = this->expression()->eval();
-            		matches(TokenList::COMMA);
-            	} for(Expression* el : *temp){
-            		IntegerValue* c = new IntegerValue(count);
-            		while(arr.find(c->asString()) != arr.end())
-            			{ delete c; c = new IntegerValue(++count); }
-            		arr[c->asString()] = el->eval();
-            	} delete temp;
-            	return new ValueNode(new ArrayValue(arr));
+				std::vector<Expression*> left, right;
+				bool hasRest = false; ContainerAccessNode* rest = NULL;
+				while(!matches(TokenList::RBRACK)){
+					if(hasRest){
+						if(matches(TokenList::DOT)) right.push_back(NULL);
+						else right.push_back(this->expression());
+					} else {
+						if(matches(TokenList::ELLIPSIS)){
+							hasRest = true;
+							if(this->getToken(0).type == TokenList::ID) rest = static_cast<ContainerAccessNode*>(this->qualifiedName());
+						} else if(matches(TokenList::DOT)) left.push_back(NULL);
+						else left.push_back(this->expression());
+					} matches(TokenList::COMMA);
+				} ArrayNode* larr = new ArrayNode(left, right, hasRest, rest);
+				if(this->matches(TokenList::ASSIGN)) return new DestructureArrayNode(larr, this->expression());
+				return larr;
+			} else if(matches(TokenList::LBRACE)){
+            	std::vector<std::pair<Expression*, Expression*>> map;
+                bool hasRest = false; ContainerAccessNode* rest = NULL;
+            	while(!matches(TokenList::RBRACE)){
+                    if(matches(TokenList::ELLIPSIS)){
+                        hasRest = true;
+                        if(this->getToken(0).type == TokenList::ID) rest = static_cast<ContainerAccessNode*>(this->qualifiedName());
+                        this->consume(TokenList::RBRACE); break;
+                    } else {
+                        Expression* first = this->expression();
+                        this->consume(TokenList::COLON);
+                        if(matches(TokenList::DOT)) map.push_back(std::make_pair(first, nullptr));
+                        else map.push_back(std::make_pair(first, this->expression()));
+                    } matches(TokenList::COMMA);
+            	} MapNode* lmap = new MapNode(map, hasRest, rest);
+                if(this->matches(TokenList::ASSIGN)) return new DestructureMapNode(lmap, this->expression());
+                return lmap;
             } else if(matches(TokenList::LPAR)){
             	Expression* expr = this->expression();
             	this->consume(TokenList::RPAR);

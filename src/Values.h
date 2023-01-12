@@ -7,6 +7,8 @@
 #include <map>
 #include <functional>
 #include <stack>
+#include <unordered_map>
+#include <algorithm>
 #include "Token.h"
 
 class Value {
@@ -17,28 +19,78 @@ class Value {
 	virtual double asDouble() = 0;
 	virtual bool asBoolean() = 0;
 	virtual bool equals(Value* other) = 0;
+    virtual bool equals(std::string other) = 0;
 };
 
-class ArrayValue : public Value {
+class IntegerValue : public Value {
+private:
+    int value;
+public:
+    TokenList getType(){ return TokenList::INT; }
+    IntegerValue(int value) : value(value){}
+    std::string asString(){
+        return std::to_string(this->value);
+    } int asInteger(){
+        return this->value;
+    } double asDouble(){
+        return (double)this->value;
+    } bool asBoolean(){
+        return this->value != 0;
+    }
+    bool equals(Value* other){
+        TokenList t = other->getType();
+        if(t==TokenList::INT) return this->value == other->asInteger();
+        else return other->equals(this);
+    }
+    bool equals(std::string other){ return this->asString() == other; }
+};
+
+class ordered_map {
+    private:
+    std::vector<std::string> order;
+    std::unordered_map<std::string, Value*> map;
+    public:
+    using size_type = typename std::unordered_map<std::string, Value*>::size_type;
+    bool contains(std::string key){
+        return std::find(this->order.begin(), this->order.end(), key) != this->order.end();
+    }
+    void put(std::string key, Value* value){
+        if(key == "null" || !this->contains(key)) this->order.push_back(key);
+        this->map[key] = value;
+    }
+    Value* at(std::string key){
+        return this->map.at(key);
+    }
+    bool empty(){ return this->order.empty(); }
+    size_type size(){ return this->order.size(); }
+    Value* operator[](std::string key){
+        return this->map[key];
+    }
+    std::string operator[](size_type pos){
+        return this->order[pos];
+    }
+};
+
+class MapValue : public Value {
 	public:
-	std::map<std::string, Value*> container;
-	TokenList getType(){ return TokenList::ARRAY; }
-	ArrayValue(std::map<std::string, Value*> map) : container(map){}
-	ArrayValue(){ this->container = std::map<std::string, Value*>(); }
+	ordered_map container;
+	TokenList getType(){ return TokenList::MAP; }
+	MapValue(ordered_map map) : container(map){}
+	MapValue(){ this->container = ordered_map(); }
 	void set(std::string k, Value* v){
-		this->container[k] = v;
+		this->container.put(k, v);
 	} Value* get(std::string k){
 		try{ return this->container.at(k); }
 		catch(const std::out_of_range& e){
-			std::cerr<<"Element with key "<<k<<" is not found in array.";
+			std::cerr<<"Element with key "<<k<<" is not found in map "<<this->asString()<<".";
 			std::exit(EXIT_FAILURE);
 		}
 	}
 	std::string asString(){
-		std::string s = "["; if(this->container.empty()) return s+"]";
-		for(std::pair<std::string, Value*> el : this->container)
-			s += el.first+":"+el.second->asString()+", ";
-		s.erase(s.length()-2); return s+"]";
+		if(this->container.empty()) return "{}"; std::string s = "{";
+		for(ordered_map::size_type i = 0; i < this->container.size(); i++)
+			s += this->container[i] +":"+ this->container[this->container[i]]->asString() +", ";
+		s.erase(s.length()-2); return s+"}";
 	} int asInteger(){
 		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" to integer.";
 		std::exit(EXIT_FAILURE);
@@ -50,22 +102,82 @@ class ArrayValue : public Value {
 	}
 	bool equals(Value* other){
 		TokenList t = other->getType();
-		if(t == TokenList::ARRAY){
-			auto v1 = this->container;
-			auto v2 = static_cast<ArrayValue*>(other)->container;
-			if(v1.size() != v2.size()) return false;
-			for(std::pair<std::string, Value*> e1 : v1){
-				if(v2.find(e1.first) == v2.end()) return false;
-				if(!v2.at(e1.first)->equals(e1.second)) return false;
-			} for(std::pair<std::string, Value*> e2 : v2){
-				if(v1.find(e2.first) == v1.end()) return false;
-				if(!v1.at(e2.first)->equals(e2.second)) return false;
+		if(t == TokenList::MAP){
+			ordered_map v2 = static_cast<MapValue*>(other)->container;
+			if(this->container.size() != v2.size()) return false;
+			for(ordered_map::size_type i = 0; i < v2.size(); i++){
+				if(!v2[v2[i]]->equals(this->container[this->container[i]])) return false;
 			} return true;
 		} else if(this->container.size() == 1)
-			for(auto& el : this->container) return el.second->equals(other);
+			return this->container[this->container[0]]->equals(other);
+		else if(t == TokenList::BOOL || t == TokenList::ARRAY) return other->equals(this);
+		else return false;
+	}
+    bool equals(std::string other){ return this->asString() == other; }
+};
+class ArrayValue : public Value {
+	public:
+	std::vector<Value*> container;
+	TokenList getType(){ return TokenList::ARRAY; }
+	ArrayValue(std::vector<Value*> arr) : container(arr){}
+	ArrayValue(){ this->container = std::vector<Value*>(); }
+	void set(int k, Value* v){
+		this->container[k] = v;
+	} Value* get(int k){
+		try{ return this->container.at(k); }
+		catch(const std::out_of_range& e){
+			std::cerr<<"Element with index "<<k<<" is not found in array "<<this->asString()<<".";
+			std::exit(EXIT_FAILURE);
+		}
+	} void append(Value* v){
+		this->container.push_back(v);
+	} void remove(int k){
+		if(k < this->container.size()) this->container.erase(this->container.begin()+k);
+		else{
+			std::cerr<<"Element with index "<<k<<" is not found in array "<<this->asString()<<".";
+			std::exit(EXIT_FAILURE);
+		}
+	}
+	std::string asString(){
+		if(this->container.empty()) return "[]"; std::string s = "[";
+		for(std::vector<Value*>::iterator it = this->container.begin(); it != this->container.end(); it++) s += (*it)->asString()+", ";
+		s.erase(s.length()-2); return s+"]";
+	} int asInteger(){
+		std::cerr<<"Cannot cast array "<<this->asString()<<" to integer.";
+		std::exit(EXIT_FAILURE);
+	} double asDouble(){
+		std::cerr<<"Cannot cast array "<<this->asString()<<" to double.";
+		std::exit(EXIT_FAILURE);
+	} bool asBoolean(){
+		return !this->container.empty();
+	}
+	ordered_map toMap(){
+		ordered_map m;
+		for(ordered_map::size_type i = 0; i < this->container.size(); i++)
+            m.put(std::to_string(i), this->container[i]);
+		return m;
+	}
+	bool equals(Value* other){
+		TokenList t = other->getType();
+		if(t == TokenList::ARRAY){
+			std::vector<Value*> v2 = static_cast<ArrayValue*>(other)->container;
+			if(this->container.size() != v2.size()) return false;
+			for(ordered_map::size_type i = 0; i < this->container.size(); i++)
+                if(!v2.at(i)->equals(this->container.at(i))) return false;
+			return true;
+		} else if(t == TokenList::MAP){
+			ordered_map v1 = this->toMap();
+			ordered_map v2 = static_cast<MapValue*>(other)->container;
+			if(v1.size() != v2.size()) return false;
+			for(ordered_map::size_type i = 0; i < v2.size(); i++){
+				if(!v2[v2[i]]->equals(v1[v1[i]])) return false;
+			} return true;
+		} else if(this->container.size() == 1)
+			return this->container[0]->equals(other);
 		else if(t == TokenList::BOOL) return other->equals(this);
 		else return false;
 	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 class StringValue : public Value {
 	private:
@@ -88,6 +200,12 @@ class StringValue : public Value {
 	} bool asBoolean(){
 		return this->value != "" && this->value != "0";
 	}
+    ordered_map toMap(){
+        ordered_map m;
+        for(ordered_map::size_type i = 0; i < this->value.length(); i++)
+            m.put(std::to_string(i), new StringValue(std::string(1, this->value[i])));
+        return m;
+    }
 	bool equals(Value* other){
 		TokenList t = other->getType();
 		if(t==TokenList::STRING) return this->value == other->asString();
@@ -97,27 +215,7 @@ class StringValue : public Value {
 			if(*e) return false; else return v == other->asDouble();
 		} else return other->equals(this);
 	}
-};
-class IntegerValue : public Value {
-	private:
-	int value;
-	public:
-	TokenList getType(){ return TokenList::INT; }
-	IntegerValue(int value) : value(value){}
-	std::string asString(){
-		return std::to_string(this->value);
-	} int asInteger(){
-		return this->value;
-	} double asDouble(){
-		return (double)this->value;
-	} bool asBoolean(){
-		return this->value != 0;
-	}
-	bool equals(Value* other){
-		TokenList t = other->getType();
-		if(t==TokenList::INT) return this->value == other->asInteger();
-		else return other->equals(this);
-	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 class DoubleValue : public Value {
 	private:
@@ -139,6 +237,7 @@ class DoubleValue : public Value {
 		if(t==TokenList::INT || t==TokenList::DOUBLE) return this->value == other->asDouble();
 		else return other->equals(this);
 	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 class BooleanValue : public Value {
 	private:
@@ -158,6 +257,7 @@ class BooleanValue : public Value {
 	bool equals(Value* other){
 		return this->value == other->asBoolean();
 	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 class NullValue : public Value {
 	public:
@@ -177,6 +277,7 @@ class NullValue : public Value {
 	bool equals(Value* other){
 		return other->getType() == TokenList::NUL;
 	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 class Expression{
 	public: virtual Value* eval() = 0;
@@ -231,9 +332,10 @@ class FunctionValue : public Value {
 			for(int i = 0; i < total; i++) Variables::set(this->params[i].first, args[i]->eval());
 			for(int i = total; i < this->params.size(); i++) Variables::set(this->params[i].first, this->params[i].second->eval());
 			if(this->varargs != ""){
-				std::map<std::string, Value*> others;
-				for(int i = this->params.size(); i < args.size(); i++) others[IntegerValue(i-this->params.size()).asString()] = args[i]->eval();
-				Variables::set(this->varargs, new ArrayValue(others));
+				ordered_map others;
+				for(int i = this->params.size(); i < args.size(); i++)
+                    others.put(std::to_string(i-this->params.size()), args[i]->eval());
+				Variables::set(this->varargs, new MapValue(others));
 			} this->bodyExecutor();
 			Variables::pop();
 			return new NullValue();
@@ -262,6 +364,7 @@ class FunctionValue : public Value {
 		else if(other->getType() == TokenList::BOOL) return other->asBoolean();
 		else return false;
 	}
+    bool equals(std::string other){ return this->asString() == other; }
 };
 
 #endif 

@@ -111,6 +111,7 @@ class Lexer {
         	else if(op == "||") return Token(TokenList::LOR, "");
 			else if(op == "...") return Token(TokenList::ELLIPSIS, "");
         	else if(op == "..") return Token(TokenList::RANGE, "");
+			else if(op == ".") return Token(TokenList::DOT, "");
         	else if(op == "?") return Token(TokenList::QUESTION, "");
         	else if(op == ":") return Token(TokenList::COLON, "");
         	else if(op == "&") return Token(TokenList::BAND, "");

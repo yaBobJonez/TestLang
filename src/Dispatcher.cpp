@@ -5,8 +5,7 @@
 
 using namespace std;
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]){
     Variables::push();
     init();
     while(true){
@@ -18,5 +17,4 @@ int main(int argc, char const *argv[])
         Parser pr(lx.tokenize());
         for(Statement* st : pr.parse()) st->execute();
     }
-    return 0;
 }

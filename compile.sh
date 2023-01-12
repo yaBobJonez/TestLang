@@ -1,1 +1,0 @@
-g++ src/*.cpp -I lib -o build/Chime.o -std=c++11 -g -Wall && echo "Successfull compilation."

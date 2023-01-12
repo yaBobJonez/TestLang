@@ -51,7 +51,7 @@ class NullStatement : public Statement {
 };
 std::ostream& operator<<(std::ostream& stream, const NullStatement& that){ return stream << "Pass{}"; }
 
-class SwitchStatement : public Statement {
+/*class SwitchStatement : public Statement {
 	public:
 	Expression* condition;
 	std::map<std::vector<Expression*>, std::vector<Statement*>> cases;
@@ -77,7 +77,7 @@ class SwitchStatement : public Statement {
 };
 std::ostream& operator<<(std::ostream& stream, const SwitchStatement& that){
 	//TODO here
-}
+}*/
 
 class ForStatement : public Statement {
 	public:
@@ -102,7 +102,7 @@ std::ostream& operator<<(std::ostream& stream, const ForStatement& that){
 
 class ForeachStatement : public Statement {
 	public:
-	ContainerAccessNode* key, * val;
+	ContainerAccessNode *key, *val;
 	Expression* cont;
 	std::vector<Statement*> statements;
 	ForeachStatement(ContainerAccessNode* k, ContainerAccessNode* v, Expression* c, std::vector<Statement*> st)
@@ -110,15 +110,14 @@ class ForeachStatement : public Statement {
 	ForeachStatement(ContainerAccessNode* v, Expression* c, std::vector<Statement*> st) : key(NULL), val(v), cont(c), statements(st){}
 	void execute(){
 		Value* contraw = this->cont->eval();
-		std::map<std::string, Value*> array;
-		if(contraw->getType() == TokenList::ARRAY) array = static_cast<ArrayValue*>(contraw)->container;
-		else if(contraw->getType() == TokenList::STRING){
-			array = std::map<std::string, Value*>(); std::string str = contraw->asString();
-			for(std::string::size_type i = 0; i < str.size(); i++) array.insert({std::to_string(i), new StringValue(std::string(1, str[i]))});
-		} else { std::cerr<<"Foreach loop expected an array or string value."; std::exit(EXIT_FAILURE); }
-		for(std::pair<std::string, Value*> el : array){
-			if(this->key != NULL) AssignmentNode(this->key, new ValueNode(new StringValue(el.first))).execute();
-			AssignmentNode(this->val, new ValueNode(el.second)).execute();
+		ordered_map iter;
+		if(contraw->getType() == TokenList::ARRAY) iter = static_cast<ArrayValue*>(contraw)->toMap();
+		else if(contraw->getType() == TokenList::MAP) iter = static_cast<MapValue*>(contraw)->container;
+		else if(contraw->getType() == TokenList::STRING) iter = static_cast<StringValue*>(contraw)->toMap();
+        else { std::cerr<<"Foreach loop expected an iterable value."; std::exit(EXIT_FAILURE); }
+		for(ordered_map::size_type i = 0; i < iter.size(); i++){
+			if(this->key != NULL) AssignmentNode(this->key, new ValueNode(new StringValue(iter[i]))).execute();
+			AssignmentNode(this->val, new ValueNode(iter[iter[i]])).execute();
 			try{ for(Statement* st : this->statements) st->execute(); }
 			catch(BreakStatement* e){ break; }
 			catch(ContinueStatement* e){ continue; }
