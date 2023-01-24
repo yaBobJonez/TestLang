@@ -41,19 +41,21 @@ class Lexer {
         	else if(word == "false") return Token(TokenList::BOOL, "0");
 			else if(word == "null") return Token(TokenList::NUL, "");
         	else if(word == "if") return Token(TokenList::IF, "");
+        	else if(word == "unless") return Token(TokenList::UNLESS, "");
+            else if(word == "elif"){ tokens.push_back(Token(TokenList::ELSE, "")); return Token(TokenList::IF, ""); }
         	else if(word == "else") return Token(TokenList::ELSE, "");
 			else if(word == "for") return Token(TokenList::FOR, "");
 			else if(word == "foreach") return Token(TokenList::FOREACH, "");
 			else if(word == "while") return Token(TokenList::WHILE, "");
+			else if(word == "until") return Token(TokenList::UNTIL, "");
 			else if(word == "do") return Token(TokenList::DO, "");
-        	else if(word == "switch") return Token(TokenList::SWITCH, "");
-        	else if(word == "case") return Token(TokenList::CASE, "");
-        	else if(word == "default") return Token(TokenList::DEFAULT, "");
+        	else if(word == "match") return Token(TokenList::MATCH, "");
 			else if(word == "function") return Token(TokenList::FUNCTION, "");
 			else if(word == "break") return Token(TokenList::BREAK, "");
         	else if(word == "continue") return Token(TokenList::CONTINUE, "");
 			else if(word == "return") return Token(TokenList::RETURN, "");
         	else if(word == "in") return Token(TokenList::IN, "");
+        	else if(word == "_") return Token(TokenList::BLANK, "");
         	else return Token(TokenList::ID, word);
         }
         Token buildString(char start){
@@ -114,6 +116,7 @@ class Lexer {
 			else if(op == ".") return Token(TokenList::DOT, "");
         	else if(op == "?") return Token(TokenList::QUESTION, "");
         	else if(op == ":") return Token(TokenList::COLON, "");
+            else if(op == "=>"){ this->tokens.push_back(Token(TokenList::COLON, "")); return Token(TokenList::RETURN, ""); }
         	else if(op == "&") return Token(TokenList::BAND, "");
         	else if(op == "|") return Token(TokenList::BOR, "");
         	else if(op == "~=") return Token(TokenList::BXOR, "");

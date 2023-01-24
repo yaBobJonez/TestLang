@@ -32,52 +32,13 @@ std::ostream& operator<<(std::ostream& stream, const ConditionalStatement& that)
 	return stream << "IfElse{cond = "<<that.condition<<"; if = ["<<oss1.str()<<"]; else = ["<<oss2.str()<<"]}";
 }
 
-class BreakStatement : public Statement {
-	public:
-	BreakStatement(){}
-	void execute(){ throw this; }
-};
-std::ostream& operator<<(std::ostream& stream, const BreakStatement& that){ return stream << "Break{}"; }
-class ContinueStatement : public Statement {
-	public:
-	ContinueStatement(){}
-	void execute(){ throw this; }
-};
-std::ostream& operator<<(std::ostream& stream, const ContinueStatement& that){ return stream << "Continue{}"; }
+//BREAK, CONT
 class NullStatement : public Statement {
 	public:
 	NullStatement(){}
 	void execute(){}
 };
 std::ostream& operator<<(std::ostream& stream, const NullStatement& that){ return stream << "Pass{}"; }
-
-/*class SwitchStatement : public Statement {
-	public:
-	Expression* condition;
-	std::map<std::vector<Expression*>, std::vector<Statement*>> cases;
-	std::vector<Statement*> defcase;
-	SwitchStatement(
-		Expression* cond,
-		std::map<std::vector<Expression*>, std::vector<Statement*>> cases,
-		std::vector<Statement*> def
-	) : condition(cond), cases(cases), defcase(def){}
-	void execute(){
-		Value* cond = this->condition->eval();
-		bool matched = false;
-		for(auto& c : this->cases){
-			if(!matched){
-				for(Expression* pattern : c.first)
-					if(cond->equals(pattern->eval())){ matched = true; break; }
-				if(!matched) continue;
-			} try{ for(Statement* st : c.second) st->execute(); }
-			catch(ContinueStatement* e){ continue; }
-			return;
-		} for(Statement* st : this->defcase) st->execute();
-	}
-};
-std::ostream& operator<<(std::ostream& stream, const SwitchStatement& that){
-	//TODO here
-}*/
 
 class ForStatement : public Statement {
 	public:

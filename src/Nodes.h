@@ -129,7 +129,8 @@ class BinaryNode : public Expression {
     			char l = ll.at(0), r = rr.at(0);
     			if(l<r) for(char i = l; i <= r; i++) arr.push_back(new StringValue(std::string(1, i)));
     			else for(char i = r; i >= l; i--) arr.push_back(new StringValue(std::string(1, i)));
-    		} return new ArrayValue(arr);
+    		} else { std::cerr << "Invalid range values specified, allowed types are char and int."; std::exit(EXIT_FAILURE); }
+            return new ArrayValue(arr);
 		} Value* bAnd(Value* left, Value* right){
     		return new IntegerValue(left->asInteger() & right->asInteger());
     	} Value* bOr(Value* left, Value* right){
@@ -156,6 +157,7 @@ class ContainerAccessNode : public Expression {
 		TokenList t = Variables::get(this->var)->getType();
 		if(t == TokenList::MAP) return static_cast<MapValue*>(this->getContainer())->get(getKey()->asString());
 		else if(t == TokenList::ARRAY) return static_cast<ArrayValue*>(this->getContainer())->get(getKey()->asInteger());
+        else { std::cerr << "Invalid operation: indexing a non-container value."; std::exit(EXIT_FAILURE); }
 	}
 	Value* getContainer(){
 		Value* cont = Variables::get(this->var);
@@ -218,42 +220,29 @@ std::ostream& operator<<(std::ostream& stream, const ValueNode& that){
 class MapNode : public Expression {
 	public:
 	std::vector<std::pair<Expression*, Expression*>> map;
-	bool hasRest; ContainerAccessNode* rest;
-	MapNode(std::vector<std::pair<Expression*, Expression*>> map, bool hasRest, ContainerAccessNode* rest)
-		: map(map), hasRest(hasRest), rest(rest){}
+	MapNode(std::vector<std::pair<Expression*, Expression*>> map) : map(map){}
 	Value* eval(){
-        if(this->hasRest || std::find_if(this->map.begin(), this->map.end(),
-         [](std::pair<Expression*, Expression*> el){ return el.second == nullptr; }) != this->map.end())
-            { std::cerr<<"Cannot skip map pairs in a non-destructuring expression."; std::exit(EXIT_FAILURE); }
         ordered_map map;
         for(ordered_map::size_type i = 0; i < this->map.size(); i++)
             map.put(this->map[i].first->eval()->asString(), this->map[i].second->eval());
         return new MapValue(map);
 	}
 };
-std::ostream& operator<<(std::ostream& stream, const MapNode& that){
-	//TODO
-}
+//MapNode toString
 
 class ArrayNode : public Expression {
 	public:
-	std::vector<Expression*> left, right;
-	bool hasRest; ContainerAccessNode* rest;
-	ArrayNode(std::vector<Expression*> left, std::vector<Expression*> right, bool hasRest, ContainerAccessNode* rest)
-		: left(left), right(right), hasRest(hasRest), rest(rest){}
+	std::vector<Expression*> arr;
+	ArrayNode(std::vector<Expression*> arr) : arr(arr){}
 	Value* eval(){
-		if(this->hasRest || std::find(this->left.begin(), this->left.end(), nullptr) != this->left.end())
-			{ std::cerr<<"Cannot skip array elements in a non-destructuring expression."; std::exit(EXIT_FAILURE); }
-		std::vector<Value*> arr; for(Expression* expr : this->left) arr.push_back(expr->eval()); return new ArrayValue(arr);
+		std::vector<Value*> arr;
+        for(Expression* expr : this->arr) arr.push_back(expr->eval());
+        return new ArrayValue(arr);
 	}
 };
-std::ostream& operator<<(std::ostream& stream, const ArrayNode& that){
-	std::ostringstream oss1; std::copy(that.left.begin(), that.left.end(), std::ostream_iterator<Expression*>(oss1, ", "));
-	std::ostringstream oss2; std::copy(that.right.begin(), that.right.end(), std::ostream_iterator<Expression*>(oss2, ", "));
-	return stream << "["+oss1.str()+", "<<that.rest<<(that.hasRest?"..., ":"")+oss2.str()+"]";
-}
+//ArrayNode toString
 
-class UnaryNode : public Expression {
+class UnaryNode : public Expression, public Statement {
     public:
         std::string op;
         Expression* right;
@@ -271,6 +260,7 @@ class UnaryNode : public Expression {
 			else if(op== "_-"){ decr(l); return r; }
             std::cerr<<"Unknown operator "<<this->op<<"."; exit(EXIT_FAILURE);
         }
+        void execute(){ this->eval(); }
     private:
     	Value* negate(Value* right){
     		return new DoubleValue(- right->asDouble());
@@ -305,87 +295,15 @@ std::ostream& operator<<(std::ostream& stream, const FunctionNode& that){
 	return stream << "Call{func = "<<that.func<<"; args = "<<oss1.str()<<"}";
 }
 
-class DestructureArrayNode : public Expression, public Statement {
-	public:
-		ArrayNode* left;
-		Expression* right;
-		DestructureArrayNode(ArrayNode* left, Expression* right) : left(left), right(right){}
-		Value* eval(){
-			Value* contRaw = this->right->eval();
-			if(contRaw->getType() != TokenList::ARRAY){ std::cerr<<"Cannot array destructure a non-array value."; std::exit(EXIT_FAILURE); }
-			std::vector<Value*> array = static_cast<ArrayValue*>(contRaw)->container;
-			int minSize = this->left->left.size() + this->left->right.size();
-			if(!this->left->hasRest && array.size() != minSize) return new BooleanValue(false);
-			else if(array.size() < minSize) return new BooleanValue(false);
-			for(int i = 0; i < this->left->left.size(); i++){
-				if(this->left->left[i] == NULL) continue; if(dynamic_cast<ContainerAccessNode*>(this->left->left[i])) continue;
-				if(!this->left->left[i]->eval()->equals(array[i])) return new BooleanValue(false);
-			} minSize = array.size()-this->left->right.size();
-			for(int i = 0; i < this->left->right.size(); i++){
-				if(this->left->right[i] == NULL) continue; if(dynamic_cast<ContainerAccessNode*>(this->left->right[i])) continue;
-				if(!this->left->right[i]->eval()->equals(array[minSize+i])) return new BooleanValue(false);
-			} for(int i = 0; i < this->left->left.size(); i++) if(ContainerAccessNode* l = dynamic_cast<ContainerAccessNode*>(this->left->left[i]))
-				AssignmentNode(l, new ValueNode(array[i])).execute();
-			for(int i = 0; i < this->left->right.size(); i++) if(ContainerAccessNode* r = dynamic_cast<ContainerAccessNode*>(this->left->right[i]))
-				AssignmentNode(r, new ValueNode(array[minSize+i])).execute();
-			if(this->left->rest != NULL){
-				std::vector<Value*> slice(array.cbegin()+this->left->left.size(), array.cend()-this->left->right.size());
-				AssignmentNode(this->left->rest, new ValueNode(new ArrayValue(slice))).execute();
-			} return new BooleanValue(true);
-		}
-		void execute(){ this->eval(); }
-};
-//TODO destructure array to string
-
-class DestructureMapNode : public Expression, public Statement {
-    public:
-        MapNode* left;
-        Expression* right;
-        DestructureMapNode(MapNode* left, Expression* right) : left(left), right(right){}
-        Value* eval(){
-            Value* contRaw = this->right->eval();
-            if(contRaw->getType() != TokenList::MAP){ std::cerr << "Cannot map destructure a non-map value."; std::exit(EXIT_FAILURE); }
-            ordered_map map = static_cast<MapValue*>(contRaw)->container;
-            int minSize = this->left->map.size();
-            if(!this->left->hasRest && map.size() != minSize) return new BooleanValue(false);
-            else if(map.size() < minSize) return new BooleanValue(false);
-            std::vector<std::pair<std::string, Expression*>> evalMap;
-            std::unordered_set<std::string> requestedKeys;
-            for(std::pair<Expression*, Expression*> pair : this->left->map) {
-                std::string key = pair.first->eval()->asString();
-                evalMap.push_back(std::make_pair(key, pair.second));
-                requestedKeys.insert(key);
-            }
-            for(ordered_map::size_type i = 0; i < minSize; i++){
-                std::string key = evalMap[i].first; Expression* value = evalMap[i].second;
-                if(!map.contains(key)) return new BooleanValue(false);
-                if(value == nullptr || dynamic_cast<ContainerAccessNode*>(value)) continue;
-                if(!value->eval()->equals(map[key])) return new BooleanValue(false);
-            } for(ordered_map::size_type i = 0; i < minSize; i++){
-                std::string key = evalMap[i].first; Expression* value = evalMap[i].second;
-                if(ContainerAccessNode* r = dynamic_cast<ContainerAccessNode*>(value))
-                    AssignmentNode(r, new ValueNode(map[key])).execute();
-            } if(this->left->rest != NULL){
-                ordered_map restMap;
-                for(ordered_map::size_type i = 0; i < map.size(); i++) if(requestedKeys.find(map[i]) == requestedKeys.end())
-                    restMap.put(map[i], map[map[i]]);
-                AssignmentNode(this->left->rest, new ValueNode(new MapValue(restMap))).execute();
-            } return new BooleanValue(true);
-        }
-        void execute(){ this->eval(); }
-};
-//TODO map destructuring to string
-
 //Patterns
 
 class Pattern {
     public:
-    virtual bool resolve(Value* value);
+    virtual bool resolve(Value* value) = 0;
 };
 class ConstantPattern : public Pattern {
-    private:
-    ValueNode* expr;
     public:
+    ValueNode* expr;
     ConstantPattern(ValueNode* expr) : expr(expr){}
     bool resolve(Value* value){
         return value->equals(this->expr->eval());
@@ -393,11 +311,23 @@ class ConstantPattern : public Pattern {
 };
 class RangePattern : public Pattern {
     private:
-    BinaryNode* expr;
+    Pattern *left, *right;
     public:
-    RangePattern(BinaryNode* expr) : expr(expr){}
+    RangePattern(Pattern* from, Pattern* to) : left(from), right(to){}
     bool resolve(Value* value){
-        return BinaryNode(new ValueNode(value), "in", this->expr).eval()->asBoolean();
+        ConstantPattern* left = dynamic_cast<ConstantPattern*>(this->left);
+        ConstantPattern* right = dynamic_cast<ConstantPattern*>(this->right);
+        if(left == nullptr || right == nullptr){ std::cerr << "Illegal range operands specified, only constants allowed."; std::exit(EXIT_FAILURE); }
+        Value* from = left->expr->eval(); Value* to = right->expr->eval();
+        TokenList lt = from->getType();
+        if(lt != to->getType()){ std::cerr<<"Types of range values don't match."; std::exit(EXIT_FAILURE); }
+        if(lt == TokenList::INT || lt == TokenList::DOUBLE) return (value->asDouble() >= from->asDouble() && value->asDouble() < to->asDouble());
+        else if(lt == TokenList::STRING){
+            std::string vs = value->asString(), lv = from->asString(), rv = to->asString();
+            if(vs.length() != 1 || lv.length() != 1 || rv.length() != 1)
+                { std::cerr<<"Invalid range values specified."; std::exit(EXIT_FAILURE); }
+            return (vs.at(0) >= lv.at(0) && vs.at(0) <= rv.at(0));
+        } else { std::cerr<<"Invalid range values specified, allowed types are char and int."; std::exit(EXIT_FAILURE); }
     }
 };
 class BindingPattern : public Pattern {
@@ -415,7 +345,7 @@ class BinaryPattern : public Pattern {
     std::string op;
     Expression* expr;
     public:
-    BinaryPattern(Expression* expr) : expr(expr){}
+    BinaryPattern(std::string op, Expression* expr) : op(op), expr(expr){}
     bool resolve(Value* value){
         if(this->op == "%") return ! BinaryNode(new ValueNode(value), "%", this->expr).eval()->asBoolean();
         else return BinaryNode(new ValueNode(value), this->op, this->expr).eval()->asBoolean();
@@ -451,15 +381,6 @@ class DisjuctionPattern : public Pattern {
 class BlankPattern : public Pattern {
     public: BlankPattern(){}
     bool resolve(Value* value){ return true; }
-};
-class ExpressionPattern : public Pattern {
-    private:
-    Expression* expr;
-    public:
-    ExpressionPattern(Expression* expr) : expr(expr){}
-    bool resolve(Value* value){
-        return this->expr->eval()->asBoolean();
-    }
 };
 class ArrayPattern : public Pattern {
     private:
@@ -499,6 +420,7 @@ class MapPattern : public Pattern {
     MapPattern(std::vector<std::pair<Expression*, Pattern*>> patterns, bool hasRest, ContainerAccessNode* rest)
         : pats(patterns), hasRest(hasRest), rest(rest){}
     bool resolve(Value* value){
+        if(value->getType() == TokenList::ARRAY) value = new MapValue(static_cast<ArrayValue*>(value)->toMap());
         if(value->getType() != TokenList::MAP){ std::cerr << "Cannot map destructure a non-map value."; std::exit(EXIT_FAILURE); }
         ordered_map map = static_cast<MapValue*>(value)->container;
         if(!this->hasRest && map.size() != this->pats.size()) return false;
@@ -523,5 +445,71 @@ class MapPattern : public Pattern {
         } return true;
     }
 };
+
+//Match Node
+
+class BreakStatement : public Statement {
+public:
+    BreakStatement(){}
+    void execute(){ throw this; }
+};
+std::ostream& operator<<(std::ostream& stream, const BreakStatement& that){ return stream << "Break{}"; }
+class ContinueStatement : public Statement {
+public:
+    ContinueStatement(){}
+    void execute(){ throw this; }
+};
+std::ostream& operator<<(std::ostream& stream, const ContinueStatement& that){ return stream << "Continue{}"; }
+
+class MatchNode : public Expression, public Statement {
+    public:
+        Expression* expr;
+        std::vector<Pattern*> cases;
+        std::vector<std::vector<Statement*>> statements;
+        MatchNode(Expression* expr, std::vector<Pattern*> cases, std::vector<std::vector<Statement*>> statements)
+            : expr(expr), cases(cases), statements(statements){}
+        Value* eval(){
+            Value* val = this->expr->eval();
+            for(std::size_t i = 0; i < this->cases.size(); i++)
+                if(this->cases[i]->resolve(val)){
+                    try{ for(Statement* st : this->statements[i]) st->execute(); }
+                    catch(ContinueStatement* e){ continue; }
+                    catch(BreakStatement* e){} //TODO DECIDE: should allow break?
+                    catch(ReturnStatement* e){ return e->expr->eval(); }
+                    break;
+                }
+            return new NullValue();
+        }
+        void execute(){ this->eval(); }
+};
+
+class DestructureArrayNode : public Expression, public Statement {
+public:
+    ArrayPattern* left;
+    Expression* right;
+    DestructureArrayNode(ArrayPattern* left, Expression* right) : left(left), right(right){}
+    Value* eval(){
+        Value* arr = this->right->eval();
+        if(arr->getType() != TokenList::ARRAY){ std::cerr<<"Cannot array destructure a non-array value."; std::exit(EXIT_FAILURE); }
+        return new BooleanValue(this->left->resolve(arr));
+    }
+    void execute(){ this->eval(); }
+};
+//TODO destructure array right string
+
+class DestructureMapNode : public Expression, public Statement {
+public:
+    MapPattern* left;
+    Expression* right;
+    DestructureMapNode(MapPattern* left, Expression* right) : left(left), right(right){}
+    Value* eval(){
+        Value* map = this->right->eval();
+        if(map->getType() != TokenList::MAP && map->getType() != TokenList::ARRAY)
+            { std::cerr << "Cannot map destructure a non-map value."; std::exit(EXIT_FAILURE); }
+        return new BooleanValue(this->left->resolve(map));
+    }
+    void execute(){ this->eval(); }
+};
+//TODO map destructuring right string
 
 #endif

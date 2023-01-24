@@ -92,10 +92,10 @@ class MapValue : public Value {
 			s += this->container[i] +":"+ this->container[this->container[i]]->asString() +", ";
 		s.erase(s.length()-2); return s+"}";
 	} int asInteger(){
-		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" to integer.";
+		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" right integer.";
 		std::exit(EXIT_FAILURE);
 	} double asDouble(){
-		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" to double.";
+		std::cerr<<"Cannot cast array \""<<this->asString()<<"\" right double.";
 		std::exit(EXIT_FAILURE);
 	} bool asBoolean(){
 		return !this->container.empty();
@@ -143,10 +143,10 @@ class ArrayValue : public Value {
 		for(std::vector<Value*>::iterator it = this->container.begin(); it != this->container.end(); it++) s += (*it)->asString()+", ";
 		s.erase(s.length()-2); return s+"]";
 	} int asInteger(){
-		std::cerr<<"Cannot cast array "<<this->asString()<<" to integer.";
+		std::cerr<<"Cannot cast array "<<this->asString()<<" right integer.";
 		std::exit(EXIT_FAILURE);
 	} double asDouble(){
-		std::cerr<<"Cannot cast array "<<this->asString()<<" to double.";
+		std::cerr<<"Cannot cast array "<<this->asString()<<" right double.";
 		std::exit(EXIT_FAILURE);
 	} bool asBoolean(){
 		return !this->container.empty();
@@ -190,12 +190,12 @@ class StringValue : public Value {
 	} int asInteger(){
 		try { return (this->value=="")? 0 : std::stoi(this->value); }
 		catch(const std::exception& e){
-			std::cerr<<"Cannot cast string \""<<this->value<<"\" to integer.";
+			std::cerr<<"Cannot cast string \""<<this->value<<"\" right integer.";
 			std::exit(EXIT_FAILURE); }
 	} double asDouble(){
 		try { return (this->value=="")? 0.0 : std::stod(this->value); }
 		catch(const std::exception& e){
-			std::cerr<<"Cannot cast string \""<<this->value<<"\" to double.";
+			std::cerr<<"Cannot cast string \""<<this->value<<"\" right double.";
 			std::exit(EXIT_FAILURE); }
 	} bool asBoolean(){
 		return this->value != "" && this->value != "0";
@@ -266,10 +266,10 @@ class NullValue : public Value {
 	std::string asString(){
 		return "null";
 	} int asInteger(){
-		std::cerr<<"Cannot cast null to integer.";
+		std::cerr<<"Cannot cast null right integer.";
 		std::exit(EXIT_FAILURE);
 	} double asDouble(){
-		std::cerr<<"Cannot cast null to double.";
+		std::cerr<<"Cannot cast null right double.";
 		std::exit(EXIT_FAILURE);
 	} bool asBoolean(){
 		return false;
@@ -323,20 +323,20 @@ class FunctionValue : public Value {
 	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::function<void()> intl)
 		: params(params), varargs(varargs), bodyExecutor(intl){ for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
 	Value* execute(std::vector<Expression*> args){
-		if(args.size() < this->rqParams){ std::cout<<"Too few arguments provided; required at least "<<this->rqParams<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
+		if(args.size() < this->rqParams)
+            { std::cout<<"Too few arguments provided; required at least "<<this->rqParams<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
 		if(this->varargs == "" && args.size() > this->params.size())
 			{ std::cout<<"Too many arguments provided; expected "<<this->params.size()<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
-		int total = args.size() > this->params.size()? this->params.size() : args.size();
+		int total = std::min(args.size(), this->params.size());
+        std::vector<std::pair<std::string, Value*>> evalArgs; ordered_map evalVariadic;
+        for(int i = 0; i < total; i++) evalArgs.push_back(std::make_pair(this->params[i].first, args[i]->eval()));
+        for(int i = total; i < this->params.size(); i++) evalArgs.push_back(std::make_pair(this->params[i].first, this->params[i].second->eval()));
+        for(int i = this->params.size(); i < args.size(); i++) evalVariadic.put(std::to_string(i-this->params.size()), args[i]->eval());
 		try {
 			Variables::push();
-			for(int i = 0; i < total; i++) Variables::set(this->params[i].first, args[i]->eval());
-			for(int i = total; i < this->params.size(); i++) Variables::set(this->params[i].first, this->params[i].second->eval());
-			if(this->varargs != ""){
-				ordered_map others;
-				for(int i = this->params.size(); i < args.size(); i++)
-                    others.put(std::to_string(i-this->params.size()), args[i]->eval());
-				Variables::set(this->varargs, new MapValue(others));
-			} this->bodyExecutor();
+			for(auto pair : evalArgs) Variables::set(pair.first, pair.second);
+			if(this->varargs != "") Variables::set(this->varargs, new MapValue(evalVariadic));
+			this->bodyExecutor();
 			Variables::pop();
 			return new NullValue();
 		} catch(ReturnStatement* e){
@@ -351,10 +351,10 @@ class FunctionValue : public Value {
 		std::ostringstream oss1; std::copy(this->body.begin(), this->body.end(), std::ostream_iterator<Statement*>(oss1, ", "));
 		return "function("+parameters+"){"+oss1.str()+"}";
 	} int asInteger(){
-		std::cerr<<"Cannot cast function to integer.";
+		std::cerr<<"Cannot cast function right integer.";
 		std::exit(EXIT_FAILURE);
 	} double asDouble(){
-		std::cerr<<"Cannot cast function to double.";
+		std::cerr<<"Cannot cast function right double.";
 		std::exit(EXIT_FAILURE);
 	} bool asBoolean(){
 		return true;
