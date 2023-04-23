@@ -129,7 +129,9 @@ class ArrayValue : public Value {
 			std::cerr<<"Element with index "<<k<<" is not found in array "<<this->asString()<<".";
 			std::exit(EXIT_FAILURE);
 		}
-	} void append(Value* v){
+	} Value* get(int from, int to){
+
+    } void append(Value* v){
 		this->container.push_back(v);
 	} void remove(int k){
 		if(k < this->container.size()) this->container.erase(this->container.begin()+k);
@@ -286,12 +288,12 @@ class Statement{
 	public: virtual void execute() = 0;
 }; //FIXME move
 class Variables {
-	static std::stack<std::map<std::string, Value*>> variables;
-	public:
+public:
+    static std::stack<std::unordered_map<std::string, Value*>> variables;
 	static Value* get(std::string key){
-		std::stack<std::map<std::string, Value*>> copy = variables;
+		std::stack<std::unordered_map<std::string, Value*>> copy = variables;
 		while(!copy.empty()){
-			std::map<std::string, Value*>::iterator search = copy.top().find(key);
+			std::unordered_map<std::string, Value*>::iterator search = copy.top().find(key);
 			if(search != copy.top().end()) return search->second;
 			copy.pop();
 		} std::cerr<<"Variable "<<key<<" is not defined."; exit(EXIT_FAILURE);
@@ -300,7 +302,7 @@ class Variables {
 	}
 	static void push(){ variables.push({}); }
 	static void pop(){ variables.pop(); }
-}; std::stack<std::map<std::string, Value*>> Variables::variables = {};
+}; std::stack<std::unordered_map<std::string, Value*>> Variables::variables = {};
 
 class ReturnStatement : public Statement { //FIXME move
 	public:
@@ -316,12 +318,16 @@ class FunctionValue : public Value {
 	std::string varargs;
 	std::vector<Statement*> body;
 	std::function<void(void)> bodyExecutor = [this]{ for(Statement* st : this->body) st->execute(); };
+    std::unordered_map<std::string, Value*> context;
 	public:
 	TokenList getType(){ return TokenList::FUNCTION; }
-	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::vector<Statement*> body)
-		: params(params), varargs(varargs), body(body){ for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
+	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::vector<Statement*> body,
+                  std::unordered_map<std::string, Value*> context)
+		: params(params), varargs(varargs), body(body), context(context)
+        { for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
 	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::function<void()> intl)
-		: params(params), varargs(varargs), bodyExecutor(intl){ for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
+		: params(params), varargs(varargs), bodyExecutor(intl)
+        { for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
 	Value* execute(std::vector<Expression*> args){
 		if(args.size() < this->rqParams)
             { std::cout<<"Too few arguments provided; required at least "<<this->rqParams<<", got "<<args.size()<<"."; exit(EXIT_FAILURE); }
@@ -333,7 +339,7 @@ class FunctionValue : public Value {
         for(int i = total; i < this->params.size(); i++) evalArgs.push_back(std::make_pair(this->params[i].first, this->params[i].second->eval()));
         for(int i = this->params.size(); i < args.size(); i++) evalVariadic.put(std::to_string(i-this->params.size()), args[i]->eval());
 		try {
-			Variables::push();
+			Variables::variables.push(this->context);
 			for(auto pair : evalArgs) Variables::set(pair.first, pair.second);
 			if(this->varargs != "") Variables::set(this->varargs, new MapValue(evalVariadic));
 			this->bodyExecutor();

@@ -26,15 +26,13 @@ class Parser {
 			else if(matches(TokenList::UNTIL)) res = this->whileState(true);
 			else if(matches(TokenList::DO)) res = this->doWhileState();
 			else if(matches(TokenList::FUNCTION)) res = this->funcState();
-			else if(matches(TokenList::BREAK)) res = new BreakStatement();
-        	else if(matches(TokenList::CONTINUE)) res = new ContinueStatement();
+			else if(matches(TokenList::BREAK)) res = this->gotoState(false);
+        	else if(matches(TokenList::CONTINUE)) res = this->gotoState(true);
 			else if(matches(TokenList::RETURN)) res = new ReturnStatement(this->expression());
-			else if(matches(TokenList::SEMICOLON)) return new NullStatement();
-        	else {
-				Statement* exprState = dynamic_cast<Statement*>(this->expression());
-				if(exprState != nullptr) res = exprState;
-				else { std::cerr<<"Unsupported statement: "<<this->getToken(0); exit(EXIT_FAILURE); }
-			} this->matches(TokenList::SEMICOLON);
+			else if(matches(TokenList::BLANK)) return new NullStatement();
+        	else if(Statement* exprState = dynamic_cast<Statement*>(this->expression())) res = exprState;
+            else { std::cerr<<"Unsupported statement: "<<this->getToken(0); exit(EXIT_FAILURE); }
+			this->matches(TokenList::SEMICOLON);
         	return res;
         }
         Statement* ifState(bool negated){
@@ -80,16 +78,18 @@ class Parser {
                 state = new ConditionalStatement(clauses[i].first, clauses[i].second, {state});
             return state;
         }
+        Statement* gotoState(bool toContinue){
+            unsigned char levels = 1;
+            if(this->getToken(0).type == TokenList::INT) levels = std::stoi(this->consume(TokenList::INT).value);
+            if(toContinue) return new ContinueStatement(levels);
+            else return new BreakStatement(levels);
+        }
 		Statement* forState(){
 			consume(TokenList::LPAR);
 			Statement* init = this->statement();
-			Expression* cond;
-			if(getToken(0).type == TokenList::SEMICOLON) cond = new ValueNode(new BooleanValue(true));
-			else cond = this->expression();
+			Expression* cond = matches(TokenList::BLANK)? new ValueNode(new BooleanValue(true)) : this->expression();
 			consume(TokenList::SEMICOLON);
-			Statement* incr;
-			if(getToken(0).type == TokenList::RPAR) incr = new NullStatement();
-			else incr = this->statement();
+			Statement* incr = this->statement();
 			consume(TokenList::RPAR);
 			std::vector<Statement*> states;
 			if(matches(TokenList::LBRACE))
@@ -142,10 +142,11 @@ class Parser {
 			if(target == NULL){ std::cerr<<"Cannot create an unnamed function in a statement."; std::exit(EXIT_FAILURE); }
 			std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> params = this->parameters();
 			std::vector<Statement*> states;
-			if(matches(TokenList::LBRACE))
-				while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
-			else states.push_back(this->statement());
-			return new AssignmentNode(static_cast<ContainerAccessNode*>(target), new ValueNode(new FunctionValue(params.second, params.first, states)));
+            if(matches(TokenList::RETEXPR)) states.push_back(new ReturnStatement(this->expression()));
+			else {
+                this->consume(TokenList::LBRACE);
+                while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
+            } return new AssignmentNode(static_cast<ContainerAccessNode*>(target), new FunctionDefinitionNode(params.second, params.first, states));
 		}
 		std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> parameters(){
 			consume(TokenList::LPAR);
@@ -238,7 +239,7 @@ class Parser {
                 if (matches(TokenList::LBRACE))
                     while (!matches(TokenList::RBRACE)) states.push_back(this->statement());
                 else states.push_back(this->statement());
-                return new ConstantPattern(new ValueNode(new FunctionValue(params.second, params.first, states)));
+                return new ConstantPattern(new FunctionDefinitionNode(params.second, params.first, states));
             } else if(matches(TokenList::NUL)) return new ConstantPattern(new ValueNode(new NullValue()));
             if(matches(TokenList::LPAR)){
                 Pattern* pat = this->pattern();
@@ -427,9 +428,13 @@ class Parser {
         Expression* factor() {
             Expression *fqn = qualifiedName();
             if (fqn != NULL) {
+                ContainerAccessNode* can = static_cast<ContainerAccessNode*>(fqn);
                 if (matches(TokenList::INCR)) return new UnaryNode("_+", fqn);
                 else if (matches(TokenList::DECR)) return new UnaryNode("_-", fqn);
-                else if (this->getToken(0).type == TokenList::LPAR) {
+                else if (can->path.empty() && this->matches(TokenList::RETEXPR)){
+                    std::vector<std::pair<std::string, Expression *>> param = {{can->var, NULL}};
+                    return new FunctionDefinitionNode(param, "", {new ReturnStatement(this->expression())});
+                } else if (this->getToken(0).type == TokenList::LPAR) {
                     Expression *func = fqn;
                     while (matches(TokenList::LPAR)) {
                         std::vector<Expression *> args;
@@ -445,17 +450,42 @@ class Parser {
                 return new ValueNode(new IntegerValue(std::stoi(curr.value)));
             } else if(matches(TokenList::DOUBLE)){
                 return new ValueNode(new DoubleValue(std::stod(curr.value)));
-            } else if(matches(TokenList::STRING)){
+            } else if(matches(TokenList::STRING_RAW)){
                 return new ValueNode(new StringValue(curr.value));
+            } else if(matches(TokenList::STRING)){
+                std::vector<std::pair<bool, std::string>> parts;
+                std::string part = ""; int parCount = 0; bool exprMode = false;
+                for(std::size_t i = 0; i < curr.value.length(); i++){
+                    if(curr.value[i] == '\\' && curr.value[i+1] == '$'){
+                        part += "$"; ++i; continue;
+                    } else if(curr.value[i] == '$' && curr.value[i+1] == '{'){
+                        if(part != "") parts.push_back(std::make_pair(false, part)); part = "";
+                        exprMode = true; parCount = 1;
+                        ++i; continue;
+                    } if(exprMode && curr.value[i] == '{') ++parCount;
+                    else if(exprMode && curr.value[i] == '}') --parCount;
+                    if(exprMode && parCount <= 0){
+                        if(part != "") parts.push_back(std::make_pair(true, part)); part = "";
+                        exprMode = false;
+                    } else part += curr.value[i];
+                } if(parts.empty() || part != "") parts.push_back(std::make_pair(exprMode, part));
+                Expression* res = parts[0].first? Parser(Lexer(parts[0].second).tokenize()).expression()
+                    : new ValueNode(new StringValue(parts[0].second));
+                for(std::size_t i = 1; i < parts.size(); i++){
+                    Expression* nextPart = parts[i].first ? Parser(Lexer(parts[i].second).tokenize()).expression()
+                        : new ValueNode(new StringValue(parts[i].second));
+                    res = new BinaryNode(res, "<>", nextPart);
+                } return res;
             } else if(matches(TokenList::BOOL)){
-                return new ValueNode(new BooleanValue(curr.value == "1" ? true : false));
+                return new ValueNode(new BooleanValue(curr.value == "1"));
             } else if(matches(TokenList::FUNCTION)){
                 std::pair<std::string, std::vector<std::pair<std::string, Expression *>>> params = this->parameters();
                 std::vector<Statement *> states;
-                if (matches(TokenList::LBRACE))
+                if(matches(TokenList::RETEXPR)) states.push_back(new ReturnStatement(this->expression()));
+                else {
+                    this->consume(TokenList::LBRACE);
                     while (!matches(TokenList::RBRACE)) states.push_back(this->statement());
-                else states.push_back(this->statement());
-                return new ValueNode(new FunctionValue(params.second, params.first, states));
+                } return new FunctionDefinitionNode(params.second, params.first, states);
             } else if(matches(TokenList::NUL)){
                 return new ValueNode(new NullValue());
             } else if(curr.type == TokenList::LBRACK){
@@ -492,15 +522,25 @@ class Parser {
                 std::vector<Pattern*> cases; std::vector<std::vector<Statement*>> states;
                 while(!matches(TokenList::RBRACE)){
                     cases.push_back(this->pattern());
-                    this->consume(TokenList::COLON);
                     std::vector<Statement*> state;
-                    if(matches(TokenList::LBRACE))
-                        while(!matches(TokenList::RBRACE)) state.push_back(this->statement());
-                    else state.push_back(this->statement());
-                    states.push_back(state);
+                    if(matches(TokenList::RETEXPR)){
+                        state.push_back(new ReturnStatement(this->expression()));
+                        this->matches(TokenList::SEMICOLON);
+                    } else{
+                        this->consume(TokenList::COLON);
+                        if(matches(TokenList::LBRACE))
+                            while(!matches(TokenList::RBRACE)) state.push_back(this->statement());
+                        else state.push_back(this->statement());
+                    } states.push_back(state);
                 } return new MatchNode(expr, cases, states);
             } else if(matches(TokenList::LPAR)){
-            	Expression* expr = this->expression();
+                int i = 0; while(this->getToken(i++).type != TokenList::RPAR);
+                if(this->getToken(i).type == TokenList::RETEXPR){
+                    this->position -= 1; //LPAR
+                    auto params = this->parameters();
+                    this->consume(TokenList::RETEXPR);
+                    return new FunctionDefinitionNode(params.second, params.first, { new ReturnStatement(this->expression()) });
+                } Expression* expr = this->expression();
             	this->consume(TokenList::RPAR);
             	return expr;
             } std::cerr<<"Unrecognized token "<<std::to_string(curr.type)<<": "<<curr.value<<"."; exit(EXIT_FAILURE);

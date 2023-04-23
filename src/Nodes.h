@@ -155,9 +155,19 @@ class ContainerAccessNode : public Expression {
 	Value* eval(){
 		if(this->path.empty()) return Variables::get(this->var);
 		TokenList t = Variables::get(this->var)->getType();
-		if(t == TokenList::MAP) return static_cast<MapValue*>(this->getContainer())->get(getKey()->asString());
-		else if(t == TokenList::ARRAY) return static_cast<ArrayValue*>(this->getContainer())->get(getKey()->asInteger());
-        else { std::cerr << "Invalid operation: indexing a non-container value."; std::exit(EXIT_FAILURE); }
+		if(t == TokenList::MAP) return static_cast<MapValue*>(this->getContainer())->get(this->getKey()->asString());
+		else if(t == TokenList::ARRAY){
+            /*Expression* key = this->path.back();
+            if(auto range = dynamic_cast<BinaryNode*>(key)) if(range->operator_ == ".."){
+                Value *left = range->left->eval(), *right = range->right->eval();
+                if(left->getType() != right->getType() || left->getType() != TokenList::INT)
+                    { std::cerr<<"Cannot slice an array using non-integer range."; std::exit(EXIT_FAILURE); }
+                ArrayValue* cont = static_cast<ArrayValue*>(this->getContainer());
+                int l = left->asInteger(), r = right->asInteger();
+                if(l<0) l=cont->container.size()-l; if(r<0) r=cont->container.size()-r;
+                //TODO slicing?
+            }*/ return static_cast<ArrayValue*>(this->getContainer())->get(this->getKey()->asInteger());
+        } else { std::cerr << "Invalid operation: indexing a non-container value."; std::exit(EXIT_FAILURE); }
 	}
 	Value* getContainer(){
 		Value* cont = Variables::get(this->var);
@@ -169,9 +179,8 @@ class ContainerAccessNode : public Expression {
 				std::exit(EXIT_FAILURE);
 			}
 		} return cont;
-	} Value* getKey(){
-		return this->path.back()->eval();
 	}
+    Value* getKey(){ return this->path.back()->eval(); }
 };
 std::ostream& operator<<(std::ostream& stream, const ContainerAccessNode& that){
     std::ostringstream oss1; std::copy(that.path.begin(), that.path.end(), std::ostream_iterator<Expression*>(oss1, "]["));
@@ -295,6 +304,22 @@ std::ostream& operator<<(std::ostream& stream, const FunctionNode& that){
 	return stream << "Call{func = "<<that.func<<"; args = "<<oss1.str()<<"}";
 }
 
+class FunctionDefinitionNode : public Expression {
+private:
+    std::vector<std::pair<std::string, Expression*>> params;
+    std::string varargs;
+    std::vector<Statement*> body;
+    std::function<void(void)> bodyExecutor = [this]{ for(Statement* st : this->body) st->execute(); };
+public:
+    FunctionDefinitionNode(std::vector<std::pair<std::string, Expression*>> params,
+                           std::string varargs, std::vector<Statement*> body)
+        : params(params), varargs(varargs), body(body){}
+    Value* eval(){
+        std::unordered_map<std::string, Value*> context = Variables::variables.top();
+        return new FunctionValue(this->params, this->varargs, this->body, context);
+    }
+};
+
 //Patterns
 
 class Pattern {
@@ -303,8 +328,8 @@ class Pattern {
 };
 class ConstantPattern : public Pattern {
     public:
-    ValueNode* expr;
-    ConstantPattern(ValueNode* expr) : expr(expr){}
+    Expression* expr;
+    ConstantPattern(Expression* expr) : expr(expr){}
     bool resolve(Value* value){
         return value->equals(this->expr->eval());
     }
@@ -450,14 +475,16 @@ class MapPattern : public Pattern {
 
 class BreakStatement : public Statement {
 public:
-    BreakStatement(){}
-    void execute(){ throw this; }
+    unsigned char levels;
+    BreakStatement(unsigned char levels) : levels(levels){}
+    void execute(){ throw BreakStatement(this->levels-1); }
 };
 std::ostream& operator<<(std::ostream& stream, const BreakStatement& that){ return stream << "Break{}"; }
 class ContinueStatement : public Statement {
 public:
-    ContinueStatement(){}
-    void execute(){ throw this; }
+    unsigned char levels;
+    ContinueStatement(unsigned char levels) : levels(levels){}
+    void execute(){ throw ContinueStatement(this->levels-1); }
 };
 std::ostream& operator<<(std::ostream& stream, const ContinueStatement& that){ return stream << "Continue{}"; }
 
@@ -473,8 +500,8 @@ class MatchNode : public Expression, public Statement {
             for(std::size_t i = 0; i < this->cases.size(); i++)
                 if(this->cases[i]->resolve(val)){
                     try{ for(Statement* st : this->statements[i]) st->execute(); }
-                    catch(ContinueStatement* e){ continue; }
-                    catch(BreakStatement* e){} //TODO DECIDE: should allow break?
+                    catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }
+                    catch(BreakStatement e){} //TODO DECIDE: should allow break?
                     catch(ReturnStatement* e){ return e->expr->eval(); }
                     break;
                 }

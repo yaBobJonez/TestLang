@@ -51,8 +51,8 @@ class ForStatement : public Statement {
 	void execute(){
 		for(this->init->execute(); this->cond->eval()->asBoolean(); this->incr->execute()){
 			try{ for(Statement* st : this->statements) st->execute(); }
-			catch(BreakStatement* e){ break; }
-			catch(ContinueStatement* e){ continue; }
+            catch(BreakStatement e){ if(e.levels) e.execute(); break; }
+            catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }
 		}
 	}
 };
@@ -80,8 +80,8 @@ class ForeachStatement : public Statement {
 			if(this->key != NULL) AssignmentNode(this->key, new ValueNode(new StringValue(iter[i]))).execute();
 			AssignmentNode(this->val, new ValueNode(iter[iter[i]])).execute();
 			try{ for(Statement* st : this->statements) st->execute(); }
-			catch(BreakStatement* e){ break; }
-			catch(ContinueStatement* e){ continue; }
+			catch(BreakStatement e){ if(e.levels) e.execute(); break; }
+			catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }
 		}
 	}
 };
@@ -100,8 +100,8 @@ class WhileStatement : public Statement {
 	void execute(){
 		while(this->cond->eval()->asBoolean()){
 			try{ for(Statement* st : this->statements) st->execute(); }
-			catch(BreakStatement* e){ break; }
-			catch(ContinueStatement* e){ continue; }
+            catch(BreakStatement e){ if(e.levels) e.execute(); break; }
+            catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }
 		}
 	}
 };
@@ -118,8 +118,8 @@ class DoWhileStatement : public Statement {
 	void execute(){
 		do {
 			try{ for(Statement* st : this->statements) st->execute(); }
-			catch(BreakStatement* e){ break; }
-			catch(ContinueStatement* e){ continue; }
+            catch(BreakStatement e){ if(e.levels) e.execute(); break; }
+            catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }
 		} while(this->cond->eval()->asBoolean());
 	}
 };

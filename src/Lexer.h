@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <vector>
+#include <locale>
+#include <codecvt>
 #include "Token.h"
 
 using namespace std;
@@ -19,6 +21,9 @@ class Lexer {
             this->position += 1;
             if(this->position >= this->size) this->curr_char = (char)0;
             else this->curr_char = this->input.at(this->position);
+        }
+        char at(int rel){
+            return (this->position+rel >= this->size)? 0 : this->input.at(this->position+rel);
         }
         Token buildNumber(){
             std::string number;
@@ -42,9 +47,17 @@ class Lexer {
 			else if(word == "null") return Token(TokenList::NUL, "");
         	else if(word == "if") return Token(TokenList::IF, "");
         	else if(word == "unless") return Token(TokenList::UNLESS, "");
-            else if(word == "elif"){ tokens.push_back(Token(TokenList::ELSE, "")); return Token(TokenList::IF, ""); }
-        	else if(word == "else") return Token(TokenList::ELSE, "");
-			else if(word == "for") return Token(TokenList::FOR, "");
+            else if(word == "elif"){
+                tokens.push_back(Token(TokenList::ELSE, ""));
+                return Token(TokenList::IF, "");
+            } else if(word == "else") return Token(TokenList::ELSE, "");
+            else if(word == "loop"){
+                tokens.insert(tokens.end(), {
+                    Token(TokenList::WHILE, ""),
+                    Token(TokenList::LPAR, ""),
+                    Token(TokenList::BOOL, "1") });
+                return Token(TokenList::RPAR, "");
+            } else if(word == "for") return Token(TokenList::FOR, "");
 			else if(word == "foreach") return Token(TokenList::FOREACH, "");
 			else if(word == "while") return Token(TokenList::WHILE, "");
 			else if(word == "until") return Token(TokenList::UNTIL, "");
@@ -58,17 +71,63 @@ class Lexer {
         	else if(word == "_") return Token(TokenList::BLANK, "");
         	else return Token(TokenList::ID, word);
         }
-        Token buildString(char start){
-        	std::string str;
-        	this->advance();
-        	while(this->curr_char != 0)
-        		if(this->curr_char == start){ this->advance(); return Token(TokenList::STRING, str); }
-        		else{ str += this->curr_char; this->advance(); }
-        	std::cerr<<"Unexpected end of string at "<<this->position<<".";
-        	std::exit(EXIT_FAILURE);
+        Token buildRawString(){
+            std::string str; this->advance();
+            while(this->curr_char != '\''){
+                switch(this->curr_char){
+                    case 0:
+                    case '\n':
+                        std::cerr<<"Unexpected end of string at "<<this->position<<".";
+                        std::exit(EXIT_FAILURE);
+                    case '\\':
+                        this->advance();
+                        if(this->curr_char == '\n'); //TOOD line tracking
+                        else if(this->curr_char == '\'');
+                        else str += '\\';
+                    default: str += this->curr_char;
+                } this->advance();
+            } this->advance(); return Token(TokenList::STRING_RAW, str);
+        }
+        Token buildString(){
+            std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> toUTF8;
+            std::string str; this->advance();
+            while(this->curr_char != '"'){
+                switch(this->curr_char){
+                    case 0:
+                    case '\n':
+                        std::cerr<<"Unexpected end of string at "<<this->position<<".";
+                        std::exit(EXIT_FAILURE);
+                    case '\\':
+                        this->advance();
+                        switch(this->curr_char){
+                            case '\n': break; //TOOD line tracking
+                            case '"': str += '"'; break;
+                            case '\\': str += '\\'; break;
+                            case '$': str += "\\$"; break;
+                            case 'a': str += '\a'; break;
+                            case 'b': str += '\b'; break;
+                            case 'f': str += '\f'; break;
+                            case 'n': str += '\n'; break;
+                            case 'r': str += '\r'; break;
+                            case 't': str += '\t'; break;
+                            case 'v': str += '\v'; break;
+                            case 'u': {
+                                std::string codepoint = ""; for(int i=0;i<4;i++){ this->advance(); codepoint += this->curr_char; }
+                                if(codepoint.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos){
+                                    std::cerr << "Non-hexadecimal Unicode codepoint \""<<codepoint<<"\" at "<<this->position<<".";
+                                    std::exit(EXIT_FAILURE);
+                                } str += toUTF8.to_bytes(std::stoi(codepoint, nullptr, 16));
+                                break; }
+                            default:
+                                std::cerr << "Unsupported escape sequence '\\"<<this->curr_char<<"' at "<<this->position<<".";
+                                std::exit(EXIT_FAILURE);
+                        } break;
+                    default: str += this->curr_char;
+                } this->advance();
+            } this->advance(); return Token(TokenList::STRING, str);
         }
         Token buildOperator(){
-        	std::string op; op+=this->curr_char;
+        	std::string op; op += this->curr_char;
         	this->advance();
         	if(op == ";") return Token(TokenList::SEMICOLON, "");
         	else if(op == "(") return Token(TokenList::LPAR, "");
@@ -95,7 +154,16 @@ class Lexer {
 			else if(op == ">>=") return Token(TokenList::ASGNBRSH, "");
 			else if(op == "++") return Token(TokenList::INCR, "");
 			else if(op == "--") return Token(TokenList::DECR, "");
-        	else if(op == "+") return Token(TokenList::ADD, "");
+			else if(op == "//"){ //TODO TEST comments single-line
+                while(this->curr_char != '\n') this->advance();
+                this->advance(); return Token(TokenList::T_EOF, ""); }
+			else if(op == "/*"){
+                while(this->curr_char != 0){
+                    if(this->curr_char == '*' && this->at(1) == '/'){ this->advance(); this->advance(); return Token(TokenList::T_EOF, ""); }
+                    this->advance();
+                } std::cerr << "Unexpected end of file at "<<this->position<<".";
+                std::exit(EXIT_FAILURE);
+            } else if(op == "+") return Token(TokenList::ADD, "");
         	else if(op == "-") return Token(TokenList::SUBTRACT, "");
         	else if(op == "*") return Token(TokenList::MULTIPLY, "");
         	else if(op == "/") return Token(TokenList::DIVIDE, "");
@@ -116,7 +184,7 @@ class Lexer {
 			else if(op == ".") return Token(TokenList::DOT, "");
         	else if(op == "?") return Token(TokenList::QUESTION, "");
         	else if(op == ":") return Token(TokenList::COLON, "");
-            else if(op == "=>"){ this->tokens.push_back(Token(TokenList::COLON, "")); return Token(TokenList::RETURN, ""); }
+            else if(op == "=>") return Token(TokenList::RETEXPR, "");
         	else if(op == "&") return Token(TokenList::BAND, "");
         	else if(op == "|") return Token(TokenList::BOR, "");
         	else if(op == "~=") return Token(TokenList::BXOR, "");
@@ -136,10 +204,12 @@ class Lexer {
             while(this->curr_char != (char)0){
                 if(this->curr_char == ' ') this->advance();
                 else if(string("0123456789").find(this->curr_char) != string::npos) tokens.push_back(this->buildNumber());
-                else if(this->curr_char=='"'||this->curr_char=='\'') tokens.push_back(this->buildString(this->curr_char));
+                else if(this->curr_char=='"') tokens.push_back(this->buildString());
+                else if(this->curr_char=='\'') tokens.push_back(this->buildRawString());
                 else if(std::string("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789").find(this->curr_char) != std::string::npos) tokens.push_back(this->buildWord());
-                else if(std::string(";=+-*/^%()[]{}.<>!~&|,?:").find(this->curr_char) != std::string::npos) tokens.push_back(this->buildOperator());
-                else{ std::cerr<<"Illegal character "<<this->curr_char<<"."; exit(EXIT_FAILURE); }
+                else if(std::string(";=+-*/^%()[]{}.<>!~&|,?:").find(this->curr_char) != std::string::npos){
+                    Token tk = this->buildOperator(); if(tk.type != TokenList::T_EOF) tokens.push_back(tk);
+                } else{ std::cerr<<"Illegal character "<<this->curr_char<<"."; exit(EXIT_FAILURE); }
             } tokens.push_back(Token(TokenList::T_EOF, ""));
             return tokens;
         }
