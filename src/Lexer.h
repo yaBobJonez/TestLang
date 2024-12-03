@@ -45,6 +45,7 @@ class Lexer {
         	} if(word == "true") return Token(TokenList::BOOL, "1");
         	else if(word == "false") return Token(TokenList::BOOL, "0");
 			else if(word == "null") return Token(TokenList::NUL, "");
+			else if(word == "const") return Token(TokenList::CONST, "");
         	else if(word == "if") return Token(TokenList::IF, "");
         	else if(word == "unless") return Token(TokenList::UNLESS, "");
             else if(word == "elif"){
@@ -68,6 +69,7 @@ class Lexer {
         	else if(word == "continue") return Token(TokenList::CONTINUE, "");
 			else if(word == "return") return Token(TokenList::RETURN, "");
         	else if(word == "in") return Token(TokenList::IN, "");
+        	else if(word == "by") return Token(TokenList::BY, "");
         	else if(word == "_") return Token(TokenList::BLANK, "");
         	else return Token(TokenList::ID, word);
         }
@@ -180,7 +182,10 @@ class Lexer {
         	else if(op == "&&") return Token(TokenList::LAND, "");
         	else if(op == "||") return Token(TokenList::LOR, "");
 			else if(op == "...") return Token(TokenList::ELLIPSIS, "");
-        	else if(op == "..") return Token(TokenList::RANGE, "");
+			else if(op == ">..<") return Token(TokenList::RANGE, "OpOp");
+			else if(op == ">..") return Token(TokenList::RANGE, "OpCl");
+			else if(op == "..<") return Token(TokenList::RANGE, "ClOp");
+			else if(op == "..") return Token(TokenList::RANGE, "ClCl");
 			else if(op == ".") return Token(TokenList::DOT, "");
         	else if(op == "?") return Token(TokenList::QUESTION, "");
         	else if(op == ":") return Token(TokenList::COLON, "");

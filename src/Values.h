@@ -181,6 +181,38 @@ class ArrayValue : public Value {
 	}
     bool equals(std::string other){ return this->asString() == other; }
 };
+class RangeValue : public Value {
+private:
+    Value *left, *right;
+    Value* step;
+    std::string type;
+public:
+    TokenList getType(){ return TokenList::RANGE; }
+    RangeValue(Value* left, std::string type, Value* right, Value* step)
+        : left(left), type(type), right(right), step(step){}
+    int asInteger() override {
+        std::cerr<<"Cannot cast range \""<<this->left->asString()<<this->type<<this->right->asString()
+            <<" by "<<this->step->asString()<<"\" to integer.";
+        std::exit(EXIT_FAILURE);
+    } double asDouble() override {
+        std::cerr<<"Cannot cast range \""<<this->left->asString()<<this->type<<this->right->asString()
+                 <<" by "<<this->step->asString()<<"\" to double.";
+        std::exit(EXIT_FAILURE);
+    } std::string asString() override {
+        return this->left->asString() + this->type + this->right->asString() +" by "+ this->step->asString();
+    } bool asBoolean() override {
+        return this->left->asDouble() < this->right->asDouble() && this->step->asDouble() > 0
+               || this->left->asDouble() > this->right->asDouble() && this->step->asDouble() < 0;
+    }
+    bool equals(Value *other) override {
+        if (this->left->equals(this->right)) return this->left->equals(other);
+        if (other->getType() != TokenList::RANGE) return false;
+        RangeValue* o = static_cast<RangeValue*>(other);
+        return this->left->equals(o->left) && this->right->equals(o->right)
+               || this->left->equals(o->right) && this->right->equals(o->left);
+    }
+    bool equals(std::string other) override { return this->asString() == other; }
+};
 class StringValue : public Value {
 	private:
 	std::string value;
@@ -289,20 +321,28 @@ class Statement{
 }; //FIXME move
 class Variables {
 public:
-    static std::stack<std::unordered_map<std::string, Value*>> variables;
+    static std::stack<std::unordered_map<std::string, std::pair<Value*, bool>>> variables;
 	static Value* get(std::string key){
-		std::stack<std::unordered_map<std::string, Value*>> copy = variables;
-		while(!copy.empty()){
-			std::unordered_map<std::string, Value*>::iterator search = copy.top().find(key);
-			if(search != copy.top().end()) return search->second;
-			copy.pop();
-		} std::cerr<<"Variable "<<key<<" is not defined."; exit(EXIT_FAILURE);
-	} static void set(std::string key, Value* value){
+        std::stack<std::unordered_map<std::string, std::pair<Value*, bool>>> copy = variables;
+        while(!copy.empty()){
+            std::unordered_map<std::string, std::pair<Value*, bool>>::iterator search = copy.top().find(key);
+            if(search != copy.top().end()) return search->second.first;
+            copy.pop();
+        } std::cerr<<"Variable "<<key<<" is not defined."; exit(EXIT_FAILURE);
+	} static void set(std::string key, std::pair<Value*, bool> value){
 		variables.top()[key] = value;
 	}
+    static bool isMutable(std::string key){
+        std::stack<std::unordered_map<std::string, std::pair<Value*, bool>>> copy = variables;
+        while(!copy.empty()){
+            std::unordered_map<std::string, std::pair<Value*, bool>>::iterator search = copy.top().find(key);
+            if(search != copy.top().end()) return search->second.second;
+            copy.pop();
+        } return true;
+    }
 	static void push(){ variables.push({}); }
 	static void pop(){ variables.pop(); }
-}; std::stack<std::unordered_map<std::string, Value*>> Variables::variables = {};
+}; std::stack<std::unordered_map<std::string, std::pair<Value*, bool>>> Variables::variables = {};
 
 class ReturnStatement : public Statement { //FIXME move
 	public:
@@ -318,11 +358,11 @@ class FunctionValue : public Value {
 	std::string varargs;
 	std::vector<Statement*> body;
 	std::function<void(void)> bodyExecutor = [this]{ for(Statement* st : this->body) st->execute(); };
-    std::unordered_map<std::string, Value*> context;
+    std::unordered_map<std::string, std::pair<Value*, bool>> context;
 	public:
 	TokenList getType(){ return TokenList::FUNCTION; }
 	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::vector<Statement*> body,
-                  std::unordered_map<std::string, Value*> context)
+                  std::unordered_map<std::string, std::pair<Value*, bool>> context)
 		: params(params), varargs(varargs), body(body), context(context)
         { for(std::pair<std::string, Expression*> param : params) if(param.second == NULL) this->rqParams++; }
 	FunctionValue(std::vector<std::pair<std::string, Expression*>> params, std::string varargs, std::function<void()> intl)
@@ -340,8 +380,8 @@ class FunctionValue : public Value {
         for(int i = this->params.size(); i < args.size(); i++) evalVariadic.put(std::to_string(i-this->params.size()), args[i]->eval());
 		try {
 			Variables::variables.push(this->context);
-			for(auto pair : evalArgs) Variables::set(pair.first, pair.second);
-			if(this->varargs != "") Variables::set(this->varargs, new MapValue(evalVariadic));
+			for(auto pair : evalArgs) Variables::set(pair.first, std::make_pair(pair.second, true));
+			if(this->varargs != "") Variables::set(this->varargs, std::make_pair(new MapValue(evalVariadic), true));
 			this->bodyExecutor();
 			Variables::pop();
 			return new NullValue();

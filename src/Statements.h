@@ -77,8 +77,8 @@ class ForeachStatement : public Statement {
 		else if(contraw->getType() == TokenList::STRING) iter = static_cast<StringValue*>(contraw)->toMap();
         else { std::cerr<<"Foreach loop expected an iterable value."; std::exit(EXIT_FAILURE); }
 		for(ordered_map::size_type i = 0; i < iter.size(); i++){
-			if(this->key != NULL) AssignmentNode(this->key, new ValueNode(new StringValue(iter[i]))).execute();
-			AssignmentNode(this->val, new ValueNode(iter[iter[i]])).execute();
+			if(this->key != NULL) AssignmentNode(this->key, new ValueNode(new StringValue(iter[i])), true).execute();
+			AssignmentNode(this->val, new ValueNode(iter[iter[i]]), true).execute();
 			try{ for(Statement* st : this->statements) st->execute(); }
 			catch(BreakStatement e){ if(e.levels) e.execute(); break; }
 			catch(ContinueStatement e){ if(e.levels) e.execute(); continue; }

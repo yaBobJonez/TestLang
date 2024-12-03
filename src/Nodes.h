@@ -61,7 +61,6 @@ class BinaryNode : public Expression {
             else if(o== "&&") return this->lAnd(left, right);
             else if(o== "||") return this->lOr(left, right);
             else if(o== "in") return this->contains(left, right);
-            else if(o== "..") return this->range(left, right);
             else if(o== "&") return this->bAnd(left, right);
             else if(o== "|") return this->bOr(left, right);
             else if(o== "~=") return this->bXor(left, right);
@@ -115,23 +114,7 @@ class BinaryNode : public Expression {
     			else return new BooleanValue(false);
     		} std::cerr<<"Value "<<right->asString()<<" is not a container.";
     		std::exit(EXIT_FAILURE);
-    	} Value* range(Value* left, Value* right){
-    		TokenList t = left->getType();
-    		if(t != right->getType()){ std::cerr<<"Types of range values don't match."; std::exit(EXIT_FAILURE); }
-			std::vector<Value*> arr;
-    		if(t == TokenList::INT){
-    			int l = left->asInteger(), r = right->asInteger();
-    			if(l<r) for(int i = l; i <= r; i++) arr.push_back(new IntegerValue(i));
-    			else for(int i = r; i >= l; i--) arr.push_back(new IntegerValue(i));
-    		} else if(t == TokenList::STRING){
-    			std::string ll = left->asString(), rr = right->asString();
-    			if(ll.length() != 1 || rr.length() != 1){ std::cerr<<"Invalid range values specified."; std::exit(EXIT_FAILURE); }
-    			char l = ll.at(0), r = rr.at(0);
-    			if(l<r) for(char i = l; i <= r; i++) arr.push_back(new StringValue(std::string(1, i)));
-    			else for(char i = r; i >= l; i--) arr.push_back(new StringValue(std::string(1, i)));
-    		} else { std::cerr << "Invalid range values specified, allowed types are char and int."; std::exit(EXIT_FAILURE); }
-            return new ArrayValue(arr);
-		} Value* bAnd(Value* left, Value* right){
+    	} Value* bAnd(Value* left, Value* right){
     		return new IntegerValue(left->asInteger() & right->asInteger());
     	} Value* bOr(Value* left, Value* right){
     		return new IntegerValue(left->asInteger() | right->asInteger());
@@ -157,16 +140,8 @@ class ContainerAccessNode : public Expression {
 		TokenList t = Variables::get(this->var)->getType();
 		if(t == TokenList::MAP) return static_cast<MapValue*>(this->getContainer())->get(this->getKey()->asString());
 		else if(t == TokenList::ARRAY){
-            /*Expression* key = this->path.back();
-            if(auto range = dynamic_cast<BinaryNode*>(key)) if(range->operator_ == ".."){
-                Value *left = range->left->eval(), *right = range->right->eval();
-                if(left->getType() != right->getType() || left->getType() != TokenList::INT)
-                    { std::cerr<<"Cannot slice an array using non-integer range."; std::exit(EXIT_FAILURE); }
-                ArrayValue* cont = static_cast<ArrayValue*>(this->getContainer());
-                int l = left->asInteger(), r = right->asInteger();
-                if(l<0) l=cont->container.size()-l; if(r<0) r=cont->container.size()-r;
-                //TODO slicing?
-            }*/ return static_cast<ArrayValue*>(this->getContainer())->get(this->getKey()->asInteger());
+            //TODO slicing?
+            return static_cast<ArrayValue*>(this->getContainer())->get(this->getKey()->asInteger());
         } else { std::cerr << "Invalid operation: indexing a non-container value."; std::exit(EXIT_FAILURE); }
 	}
 	Value* getContainer(){
@@ -192,15 +167,18 @@ class AssignmentNode : public Expression, public Statement {
 	ContainerAccessNode* left;
 	std::string op;
 	Expression* right;
-	AssignmentNode(ContainerAccessNode* left, std::string op, Expression* right) : left(left), op(op), right(right){}
-	AssignmentNode(ContainerAccessNode* left, Expression* right) : left(left), op(""), right(right){}
+    bool isMutable;
+	AssignmentNode(ContainerAccessNode* left, std::string op, Expression* right, bool isVar) : left(left), op(op), right(right), isMutable(isVar){}
+	AssignmentNode(ContainerAccessNode* left, Expression* right, bool isVar) : left(left), op(""), right(right), isMutable(isVar){}
 	Value* eval(){
-		if(op== "" && this->left->path.empty()) Variables::set(this->left->var, this->right->eval());
+		if(this->left->path.empty() && !Variables::isMutable(this->left->var)) {
+            std::cerr<<"Cannot "<<(this->isMutable? "assign to" : "redeclare")<<" the constant "<<this->left->var; std::exit(EXIT_FAILURE);
+        } if(op== "" && this->left->path.empty()) Variables::set(this->left->var, std::make_pair(this->right->eval(), this->isMutable));
 		else if(op== ""){
 			Value* c = this->left->getContainer();
 			if(c->getType()==TokenList::MAP) static_cast<MapValue*>(c)->set(this->left->getKey()->asString(), this->right->eval());
 			else static_cast<ArrayValue*>(c)->set(this->left->getKey()->asInteger(), this->right->eval());
-		} else if(this->left->path.empty()) Variables::set(this->left->var, BinaryNode(this->left, this->op, this->right).eval());
+		} else if(this->left->path.empty()) Variables::set(this->left->var, std::make_pair(BinaryNode(this->left, this->op, this->right).eval(), this->isMutable));
 		else {
 			Value* c = this->left->getContainer();
 			if(c->getType()==TokenList::MAP) static_cast<MapValue*>(c)->set(this->left->getKey()->asString(), BinaryNode(this->left, this->op, this->right).eval());
@@ -251,6 +229,16 @@ class ArrayNode : public Expression {
 };
 //ArrayNode toString
 
+class RangeNode : public Expression {
+public:
+    Expression *left, *right;
+    std::string type;
+    Expression* step;
+    RangeNode(Expression *left, Expression *right, std::string type, Expression *step)
+        : left(left), right(right), type(type), step(step) {}
+    //
+};
+
 class UnaryNode : public Expression, public Statement {
     public:
         std::string op;
@@ -278,9 +266,9 @@ class UnaryNode : public Expression, public Statement {
     	} Value* bNot(Value* right){
     		return new IntegerValue(~ right->asInteger());
     	} Value* incr(ContainerAccessNode* left){
-			return AssignmentNode(left, "+", new ValueNode(new DoubleValue(1))).eval();
+			return AssignmentNode(left, "+", new ValueNode(new DoubleValue(1)), true).eval();
 		} Value* decr(ContainerAccessNode* left){
-			return AssignmentNode(left, "-", new ValueNode(new DoubleValue(1))).eval();
+			return AssignmentNode(left, "-", new ValueNode(new DoubleValue(1)), true).eval();
 		}
 };
 std::ostream& operator<<(std::ostream& stream, const UnaryNode& that){
@@ -315,7 +303,7 @@ public:
                            std::string varargs, std::vector<Statement*> body)
         : params(params), varargs(varargs), body(body){}
     Value* eval(){
-        std::unordered_map<std::string, Value*> context = Variables::variables.top();
+        std::unordered_map<std::string, std::pair<Value*, bool>> context = Variables::variables.top();
         return new FunctionValue(this->params, this->varargs, this->body, context);
     }
 };
@@ -334,34 +322,13 @@ class ConstantPattern : public Pattern {
         return value->equals(this->expr->eval());
     }
 };
-class RangePattern : public Pattern {
-    private:
-    Pattern *left, *right;
-    public:
-    RangePattern(Pattern* from, Pattern* to) : left(from), right(to){}
-    bool resolve(Value* value){
-        ConstantPattern* left = dynamic_cast<ConstantPattern*>(this->left);
-        ConstantPattern* right = dynamic_cast<ConstantPattern*>(this->right);
-        if(left == nullptr || right == nullptr){ std::cerr << "Illegal range operands specified, only constants allowed."; std::exit(EXIT_FAILURE); }
-        Value* from = left->expr->eval(); Value* to = right->expr->eval();
-        TokenList lt = from->getType();
-        if(lt != to->getType()){ std::cerr<<"Types of range values don't match."; std::exit(EXIT_FAILURE); }
-        if(lt == TokenList::INT || lt == TokenList::DOUBLE) return (value->asDouble() >= from->asDouble() && value->asDouble() < to->asDouble());
-        else if(lt == TokenList::STRING){
-            std::string vs = value->asString(), lv = from->asString(), rv = to->asString();
-            if(vs.length() != 1 || lv.length() != 1 || rv.length() != 1)
-                { std::cerr<<"Invalid range values specified."; std::exit(EXIT_FAILURE); }
-            return (vs.at(0) >= lv.at(0) && vs.at(0) <= rv.at(0));
-        } else { std::cerr<<"Invalid range values specified, allowed types are char and int."; std::exit(EXIT_FAILURE); }
-    }
-};
 class BindingPattern : public Pattern {
     private:
     ContainerAccessNode* expr;
     public:
     BindingPattern(ContainerAccessNode* expr) : expr(expr){}
     bool resolve(Value* value){
-        AssignmentNode(this->expr, new ValueNode(value)).execute();
+        AssignmentNode(this->expr, new ValueNode(value), true).execute();
         return true;
     }
 };
@@ -433,7 +400,7 @@ class ArrayPattern : public Pattern {
             if(BindingPattern* pat = dynamic_cast<BindingPattern*>(this->right[i])) pat->resolve(array[minSize+i]);
         if(this->rest != nullptr){
             std::vector<Value*> slice(array.begin()+this->left.size(), array.end()-this->right.size());
-            AssignmentNode(this->rest, new ValueNode(new ArrayValue(slice))).execute();
+            AssignmentNode(this->rest, new ValueNode(new ArrayValue(slice)), true).execute();
         } return true;
     }
 };
@@ -466,7 +433,7 @@ class MapPattern : public Pattern {
             ordered_map restMap;
             for(ordered_map::size_type i = 0; i < map.size(); i++) if(requestedKeys.find(map[i]) == requestedKeys.end())
                 restMap.put(map[i], map[map[i]]);
-            AssignmentNode(this->rest, new ValueNode(new MapValue(restMap))).execute();
+            AssignmentNode(this->rest, new ValueNode(new MapValue(restMap)), true).execute();
         } return true;
     }
 };

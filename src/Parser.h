@@ -146,7 +146,7 @@ class Parser {
 			else {
                 this->consume(TokenList::LBRACE);
                 while(!matches(TokenList::RBRACE)) states.push_back(this->statement());
-            } return new AssignmentNode(static_cast<ContainerAccessNode*>(target), new FunctionDefinitionNode(params.second, params.first, states));
+            } return new AssignmentNode(static_cast<ContainerAccessNode*>(target), new FunctionDefinitionNode(params.second, params.first, states), true);
 		}
 		std::pair<std::string, std::vector<std::pair<std::string, Expression*>>> parameters(){
 			consume(TokenList::LPAR);
@@ -186,18 +186,14 @@ class Parser {
             } return result;
         }
         Pattern* patternUnary(){
-            if(matches(TokenList::LNOT)) return new NegationPattern(this->patternRange());
-            return this->patternRange();
-        }
-        Pattern* patternRange(){
-            Pattern* result = this->patternFactor();
-            if(matches(TokenList::RANGE)) return new RangePattern(result, this->patternFactor());
-            return result;
+            if(matches(TokenList::LNOT)) return new NegationPattern(this->patternFactor());
+            return this->patternFactor();
         }
         Pattern* patternFactor(){
             Expression* fqn = this->qualifiedName();
             if(fqn != NULL) return new BindingPattern(static_cast<ContainerAccessNode*>(fqn));
-            if(matches(TokenList::LESS)) return new BinaryPattern("<", this->factor());
+            if(matches(TokenList::POWER)) return new BinaryPattern("==", this->factor());
+            else if(matches(TokenList::LESS)) return new BinaryPattern("<", this->factor());
             else if(matches(TokenList::LTOREQ)) return new BinaryPattern("<=", this->factor());
             else if(matches(TokenList::GREATER)) return new BinaryPattern(">", this->factor());
             else if(matches(TokenList::GTOREQ)) return new BinaryPattern(">=", this->factor());
@@ -255,18 +251,18 @@ class Parser {
 			Expression* result = this->qualifiedName();
 			if(result != NULL){
 				ContainerAccessNode* cont = static_cast<ContainerAccessNode*>(result);
-				if(matches(TokenList::ASSIGN)) return new AssignmentNode(cont, this->expression());
-				else if(matches(TokenList::ASGNCONCAT)) return new AssignmentNode(cont, "><", this->expression());
-				else if(matches(TokenList::ASGNADD)) return new AssignmentNode(cont, "+", this->expression());
-				else if(matches(TokenList::ASGNSUBTRACT)) return new AssignmentNode(cont, "-", this->expression());
-				else if(matches(TokenList::ASGNMULTIPLY)) return new AssignmentNode(cont, "*", this->expression());
-				else if(matches(TokenList::ASGNDIVIDE)) return new AssignmentNode(cont, "/", this->expression());
-				else if(matches(TokenList::ASGNMODULO)) return new AssignmentNode(cont, "%", this->expression());
-				else if(matches(TokenList::ASGNPOWER)) return new AssignmentNode(cont, "^", this->expression());
-				else if(matches(TokenList::ASGNBAND)) return new AssignmentNode(cont, "&", this->expression());
-				else if(matches(TokenList::ASGNBOR)) return new AssignmentNode(cont, "|", this->expression());
-				else if(matches(TokenList::ASGNBLSH)) return new AssignmentNode(cont, "<<", this->expression());
-				else if(matches(TokenList::ASGNBRSH)) return new AssignmentNode(cont, ">>", this->expression());
+				if(matches(TokenList::ASSIGN)) return new AssignmentNode(cont, this->expression(), true);
+				else if(matches(TokenList::ASGNCONCAT)) return new AssignmentNode(cont, "><", this->expression(), true);
+				else if(matches(TokenList::ASGNADD)) return new AssignmentNode(cont, "+", this->expression(), true);
+				else if(matches(TokenList::ASGNSUBTRACT)) return new AssignmentNode(cont, "-", this->expression(), true);
+				else if(matches(TokenList::ASGNMULTIPLY)) return new AssignmentNode(cont, "*", this->expression(), true);
+				else if(matches(TokenList::ASGNDIVIDE)) return new AssignmentNode(cont, "/", this->expression(), true);
+				else if(matches(TokenList::ASGNMODULO)) return new AssignmentNode(cont, "%", this->expression(), true);
+				else if(matches(TokenList::ASGNPOWER)) return new AssignmentNode(cont, "^", this->expression(), true);
+				else if(matches(TokenList::ASGNBAND)) return new AssignmentNode(cont, "&", this->expression(), true);
+				else if(matches(TokenList::ASGNBOR)) return new AssignmentNode(cont, "|", this->expression(), true);
+				else if(matches(TokenList::ASGNBLSH)) return new AssignmentNode(cont, "<<", this->expression(), true);
+				else if(matches(TokenList::ASGNBRSH)) return new AssignmentNode(cont, ">>", this->expression(), true);
 			} this->position = pos;
 			return this->ternary();
 		}
@@ -347,18 +343,10 @@ class Parser {
         	} return result;
         }
         Expression* concatenation(){
-        	Expression* result = this->ranging();
-        	while(true){
-        		if(matches(TokenList::CONCAT)){
-        			result = new BinaryNode(result, "<>", this->ranging()); continue;
-        		} break;
-        	} return result;
-        }
-        Expression* ranging(){
         	Expression* result = this->shifting();
         	while(true){
-        		if(matches(TokenList::RANGE)){
-        			result = new BinaryNode(result, "..", this->shifting()); continue;
+        		if(matches(TokenList::CONCAT)){
+        			result = new BinaryNode(result, "<>", this->shifting()); continue;
         		} break;
         	} return result;
         }
@@ -383,15 +371,24 @@ class Parser {
             } return result;
         }
         Expression* multiplication(){
-            Expression* result = this->unary();
+            Expression* result = this->range();
             while(true){
                 if(matches(TokenList::MULTIPLY)){
-                    result = new BinaryNode(result, "*", this->unary()); continue;
+                    result = new BinaryNode(result, "*", this->range()); continue;
                 } else if(matches(TokenList::DIVIDE)){
-                    result = new BinaryNode(result, "/", this->unary()); continue;
+                    result = new BinaryNode(result, "/", this->range()); continue;
                 } else if(matches(TokenList::MODULO)){
-                    result = new BinaryNode(result, "%", this->unary()); continue;
+                    result = new BinaryNode(result, "%", this->range()); continue;
                 } break;
+            } return result;
+        }
+        Expression* range(){
+            Expression* result = this->unary();
+            if(this->getToken(0).type == TokenList::RANGE){
+                std::string type = this->consume(TokenList::RANGE).value;
+                Expression* right = this->shifting();
+                Expression* step = matches(TokenList::BY)? this->shifting() : new ValueNode(new IntegerValue(1));
+                result = new RangeNode(result, type, right, step);
             } return result;
         }
         Expression* unary(){
@@ -489,8 +486,12 @@ class Parser {
             } else if(matches(TokenList::NUL)){
                 return new ValueNode(new NullValue());
             } else if(curr.type == TokenList::LBRACK){
-                std::size_t i = 1; while(this->getToken(i++).type != TokenList::RBRACK);
-                if(this->getToken(i).type == TokenList::ASSIGN){
+                std::size_t i = 1; int lvls = 1;
+                while(lvls > 0){
+                    if(this->getToken(i).type == TokenList::LBRACK) ++lvls;
+                    else if(this->getToken(i).type == TokenList::RBRACK) --lvls;
+                    ++i;
+                } if(this->getToken(i).type == TokenList::ASSIGN){
                     ArrayPattern* pat = static_cast<ArrayPattern*>(this->pattern());
                     this->consume(TokenList::ASSIGN);
                     return new DestructureArrayNode(pat, this->expression());
